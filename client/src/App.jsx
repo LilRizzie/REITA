@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaArrowUp } from 'react-icons/fa';
 import './App.css';
 import ProtectedRoute from './components/ProtectedRoute';
 import Calculator from './pages/Calculator';
@@ -14,49 +15,78 @@ import Analytics from './pages/Analytics';
 import { Clients, Users } from './pages/Management';
 import Listings from './pages/Listings';
 import Signup from './pages/Signup';
+import VerificationRequired from './pages/VerificationRequired';
 
 const features = [
   {
     icon: '◈',
-    title: 'Live market intelligence',
-    text: 'Track emerging demand and property momentum with clarity and speed.',
+    title: 'Property Management',
+    text: 'Track acquisitions, monitor performance, and manage your entire portfolio from one refined workspace.',
   },
   {
     icon: '◎',
-    title: 'Profit-first modeling',
-    text: 'Review yield, costs, and timing in one elegant workflow before committing.',
+    title: 'ROI Calculator',
+    text: 'Analyze yield, costs, and timing with precision before committing to any investment.',
   },
   {
     icon: '✦',
-    title: 'Portfolio precision',
-    text: 'Gain a panoramic view of every active investment with calm confidence.',
+    title: 'PDF Reports',
+    text: 'Generate professional, branded investment reports you can download or print instantly.',
+  },
+  {
+    icon: '◉',
+    title: 'Dashboard Analytics',
+    text: 'Gain a panoramic view of every active investment with clear, actionable metrics.',
+  },
+  {
+    icon: '⌕',
+    title: 'Property Search & Filtering',
+    text: 'Find the right opportunity fast with powerful search, filters, and sorting.',
+  },
+  {
+    icon: '🔒',
+    title: 'Secure Authentication',
+    text: 'Email verification and Google sign-in keep your investment data protected.',
   },
 ];
 
-const whyChoose = [
-  'Nigerian property insights designed for confident decision-making.',
-  'Luxury-grade analytics with clear, professional reporting.',
-  'A refined experience built for ambitious private investors.',
-];
-
-const testimonials = [
+const whyReita = [
   {
-    quote: 'It gave us the confidence to move on a premium opportunity before the market shifted.',
-    name: 'Ada Okafor',
-    role: 'Residential Investor',
+    icon: '⚡',
+    title: 'Fast Analysis',
+    text: 'Run complete investment calculations in seconds with instant, accurate results.',
   },
   {
-    quote: 'The experience feels as polished as the investments it helps us evaluate.',
-    name: 'Tunde Adebayo',
-    role: 'Portfolio Lead',
+    icon: '🛡️',
+    title: 'Secure',
+    text: 'Firebase authentication with email verification and Google sign-in keeps your data safe.',
+  },
+  {
+    icon: '📄',
+    title: 'Professional Reports',
+    text: 'Generate polished PDF reports that present your analysis with clarity and authority.',
+  },
+  {
+    icon: '👥',
+    title: 'Role Based Access',
+    text: 'Dedicated workspaces for investors, property agents, and administrators.',
+  },
+  {
+    icon: '🎨',
+    title: 'Modern Interface',
+    text: 'A luxury-grade dark interface designed for focused, confident decision-making.',
   },
 ];
 
 function LandingPage() {
   const [scrollY, setScrollY] = useState(0);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+      setShowBackToTop(window.scrollY > 400);
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     const observer = new IntersectionObserver(
@@ -79,19 +109,23 @@ function LandingPage() {
     };
   }, []);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="landing-page">
-      <header className="topbar">
+      <header className={`topbar${scrollY > 50 ? ' topbar-scrolled' : ''}`}>
         <a className="brand" href="#home">
           <span className="brand-mark">A</span>
           REITA
         </a>
         <nav className="nav-links" aria-label="Primary navigation">
-          <a href="#home">Home</a>
-          <a href="#analytics">Investment Calculator</a>
-          <a href="#features">Dashboard</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
+          <a href="#home" className={scrollY < 300 ? 'active' : ''}>Home</a>
+          <a href="#features" className={scrollY >= 300 && scrollY < 900 ? 'active' : ''}>Features</a>
+          <a href="#about" className={scrollY >= 900 && scrollY < 1500 ? 'active' : ''}>About</a>
+          <a href="#analytics" className={scrollY >= 1500 && scrollY < 2200 ? 'active' : ''}>Calculator</a>
+          <a href="#contact" className={scrollY >= 2200 ? 'active' : ''}>Contact</a>
           <Link to="/login">Sign in</Link>
         </nav>
       </header>
@@ -104,7 +138,7 @@ function LandingPage() {
               <p className="eyebrow">Luxury Real Estate Intelligence</p>
               <h1>Smarter Real Estate Investment Starts Here</h1>
               <p className="hero-text">
-                Encourage Nigerian property investors to analyze profit, risk, and timing before making their next move.
+                Analyze profit, risk, and timing before making your next move. REITA gives Nigerian property investors the clarity they need to invest with confidence.
               </p>
               <div className="hero-actions">
                 <Link className="btn btn-primary" to="/signup">
@@ -154,7 +188,7 @@ function LandingPage() {
         <section id="features" className="section reveal">
           <div className="section-heading">
             <p className="eyebrow">Features</p>
-            <h2>Designed for thoughtful investment decisions.</h2>
+            <h2>Everything you need for confident property investment.</h2>
           </div>
           <div className="feature-list">
             {features.map((feature) => (
@@ -171,15 +205,22 @@ function LandingPage() {
 
         <section id="about" className="section reveal">
           <div className="section-heading">
-            <p className="eyebrow">Why Choose Us</p>
-            <h2>Elegant systems for investors who value precision.</h2>
+            <p className="eyebrow">About REITA</p>
+            <h2>Real Estate Investment Analysis System</h2>
           </div>
           <div className="about-grid">
             <div className="glass-card about-card">
+              <p className="about-intro">
+                REITA is a comprehensive real estate investment analysis platform built for Nigerian investors, property agents, and administrators. It combines intelligent financial modeling with a luxury-grade interface to help you make informed decisions.
+              </p>
               <ul className="check-list">
-                {whyChoose.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
+                <li>Property Analysis</li>
+                <li>ROI Calculator</li>
+                <li>Investment Reports</li>
+                <li>Portfolio Management</li>
+                <li>Admin Dashboard</li>
+                <li>Property Agents</li>
+                <li>Investor Dashboard</li>
               </ul>
             </div>
             <div className="glass-card analytics-card">
@@ -229,38 +270,78 @@ function LandingPage() {
 
         <section id="testimonials" className="section reveal">
           <div className="section-heading">
-            <p className="eyebrow">Testimonials</p>
-            <h2>Trusted by investors who expect more.</h2>
+            <p className="eyebrow">Why REITA?</p>
+            <h2>Built for investors who expect more.</h2>
           </div>
           <div className="testimonial-grid">
-            {testimonials.map((item) => (
-              <blockquote className="glass-card testimonial-card" key={item.name}>
-                <p>“{item.quote}”</p>
-                <strong>{item.name}</strong>
-                <span>{item.role}</span>
-              </blockquote>
+            {whyReita.map((item) => (
+              <div className="glass-card testimonial-card" key={item.title}>
+                <div className="why-icon">{item.icon}</div>
+                <strong>{item.title}</strong>
+                <p>{item.text}</p>
+              </div>
             ))}
           </div>
         </section>
       </main>
 
       <footer id="contact" className="footer">
-        <div>
-          <p className="eyebrow">Contact</p>
-          <h2>Let your next property move feel effortless.</h2>
-          <div className="contact-info-list">
-            <p><strong>Phone:</strong> <a href="tel:08141360230">08141360230</a></p>
+        <div className="footer-grid">
+          <div className="footer-brand">
+            <div className="brand">
+              <span className="brand-mark">A</span>
+              REITA
+            </div>
+            <p className="footer-tagline">Real Estate Investment Analysis System</p>
+            <p className="footer-desc">
+              Helping investors make informed real estate decisions through intelligent financial analysis.
+            </p>
+          </div>
+
+          <div className="footer-col">
+            <h4>Quick Links</h4>
+            <a href="#home">Home</a>
+            <a href="#features">Features</a>
+            <a href="#about">About</a>
+            <a href="#analytics">Calculator</a>
+            <a href="#contact">Contact</a>
+            <Link to="/login">Login</Link>
+          </div>
+
+          <div className="footer-col">
+            <h4>Contact</h4>
             <p><strong>Email:</strong> <a href="mailto:britneyjacksonel@gmail.com">britneyjacksonel@gmail.com</a></p>
+            <p><strong>Phone:</strong> <a href="tel:08141360230">08141360230</a></p>
+          </div>
+
+          <div className="footer-col">
+            <h4>Follow Us</h4>
+            <div className="social-icons">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><FaGithub /></a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><FaLinkedin /></a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><FaTwitter /></a>
+              <a href="mailto:britneyjacksonel@gmail.com" aria-label="Email"><FaEnvelope /></a>
+            </div>
           </div>
         </div>
-        <a className="btn btn-primary" href="mailto:britneyjacksonel@gmail.com">
-          britneyjacksonel@gmail.com
-        </a>
+
+        <div className="footer-bottom">
+          <p>© 2026 REITA. All Rights Reserved.</p>
+          <div className="footer-legal">
+            <a href="#home">Privacy Policy</a>
+            <a href="#home">Terms of Service</a>
+          </div>
+        </div>
       </footer>
+
+      {showBackToTop && (
+        <button type="button" className="back-to-top" onClick={scrollToTop} aria-label="Back to top">
+          <FaArrowUp />
+        </button>
+      )}
     </div>
   );
 }
-
 
 function App() {
   return (
@@ -269,6 +350,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verification-required" element={<VerificationRequired />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin-dashboard" element={<Dashboard />} />

@@ -496,43 +496,6 @@ body {
   color: #a59f8f;
 }
 
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 3rem 2.5rem 3.2rem;
-  max-width: 1120px;
-  margin: 0 auto;
-  border-top: 1px solid rgba(212, 175, 55, 0.16);
-  margin-top: 4rem;
-}
-
-.footer h2 {
-  margin: 0;
-  color: #fff;
-}
-
-.contact-info-list {
-  display: grid;
-  gap: 0.4rem;
-  margin-top: 0.8rem;
-}
-
-.contact-info-list p {
-  margin: 0;
-  color: #d7cfb7;
-}
-
-.contact-info-list a {
-  color: #d4af37;
-  text-decoration: none;
-}
-
-.contact-info-list a:hover {
-  text-decoration: underline;
-}
-
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -883,6 +846,75 @@ body {
   border-radius: 999px;
   background: rgba(212, 175, 55, 0.16);
   color: #f1dfad;
+}
+
+/* ============================================================
+   VERIFICATION CARDS — Success & Required
+   ============================================================ */
+
+.verification-card {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  text-align: center;
+  padding: 1.2rem 0.4rem;
+}
+
+.verification-icon {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #f6e6b1;
+  font-size: 1.5rem;
+}
+
+.verification-card h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.verification-card p {
+  margin: 0;
+  color: #d7cfb7;
+  line-height: 1.7;
+}
+
+.verification-email {
+  color: #f6e6b1;
+  font-size: 1rem;
+  word-break: break-all;
+}
+
+.verification-actions {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.verification-actions .auth-submit {
+  width: 100%;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid rgba(17, 17, 17, 0.3);
+  border-top-color: #111;
+  border-radius: 50%;
+  animation: btnSpin 0.7s linear infinite;
+}
+
+@keyframes btnSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeSlideUp {
@@ -1777,6 +1809,35 @@ tbody tr:hover {
   color: #e7dbc1;
 }
 
+.insight-list div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.insight-list div span {
+  color: #c9bb99;
+}
+
+.insight-list div strong {
+  color: #f6e6b1;
+  text-align: right;
+}
+
+.download-btn {
+  background: rgba(76, 175, 80, 0.12);
+  border-color: rgba(76, 175, 80, 0.35);
+  color: #81c784;
+}
+
+.download-btn:hover {
+  background: rgba(76, 175, 80, 0.22);
+  border-color: rgba(76, 175, 80, 0.6);
+}
+
 .profile-details,
 .setting-list {
   display: grid;
@@ -2034,6 +2095,275 @@ tbody tr:hover {
 }
 
 /* ============================================================
+   LANDING PAGE POLISH
+   ============================================================ */
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.85) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.topbar-scrolled {
+  background: rgba(6, 6, 6, 0.9);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+.nav-links a.active {
+  color: #d4af37;
+}
+
+.about-intro {
+  color: #d7cfb7;
+  line-height: 1.8;
+  margin: 0 0 1.2rem;
+}
+
+.why-icon {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  font-size: 1.2rem;
+  margin-bottom: 0.4rem;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+
+.footer {
+  display: block;
+  padding: 3.5rem 2.5rem 1.5rem;
+  max-width: 1120px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(212, 175, 55, 0.16);
+  margin-top: 4rem;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.footer-brand {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+.footer-tagline {
+  color: #d4af37;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.footer-desc {
+  color: #a59f8f;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 320px;
+}
+
+.footer-col {
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+.footer-col h4 {
+  color: #fff;
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+}
+
+.footer-col a {
+  color: #c9bb99;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-col a:hover {
+  color: #d4af37;
+}
+
+.footer-col p {
+  color: #c9bb99;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.footer-col p a {
+  color: #d4af37;
+}
+
+.social-icons {
+  display: flex;
+  gap: 0.7rem;
+}
+
+.social-icons a {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e7dbc1;
+  font-size: 1rem;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.social-icons a:hover {
+  background: rgba(212, 175, 55, 0.16);
+  border-color: rgba(212, 175, 55, 0.45);
+  color: #f7e8b3;
+  transform: translateY(-2px);
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8f8568;
+  font-size: 0.9rem;
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+.footer-legal {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.footer-legal a {
+  color: #8f8568;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-legal a:hover {
+  color: #d4af37;
+}
+
+/* ============================================================
+   BACK TO TOP
+   ============================================================ */
+
+.back-to-top {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(10, 10, 10, 0.9);
+  color: #f7e8b3;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.back-to-top:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: rgba(212, 175, 55, 0.7);
+  transform: translateY(-2px);
+}
+
+/* ============================================================
+   RESPONSIVE SIDEBAR / DRAWER
+   ============================================================ */
+
+.hamburger-btn {
+  display: none;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4e1a6;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.hamburger-btn:hover {
+  border-color: rgba(212, 175, 55, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.topbar-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+  backdrop-filter: blur(4px);
+}
+
+.sidebar-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  z-index: 50;
+  border-radius: 0 1.6rem 1.6rem 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.drawer-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4e1a6;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.drawer-close:hover {
+  border-color: rgba(212, 175, 55, 0.45);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
    RESPONSIVE BREAKPOINTS
    ============================================================ */
 
@@ -2076,10 +2406,13 @@ tbody tr:hover {
     gap: 16px;
   }
 
-  .sidebar {
-    position: static;
-    height: auto;
-    top: auto;
+  .sidebar-desktop {
+    display: none;
+  }
+
+  .hamburger-btn {
+    display: grid;
+    place-items: center;
   }
 
   .dashboard-topbar {
@@ -2104,6 +2437,10 @@ tbody tr:hover {
 
   .auth-hero {
     min-height: 260px;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -2231,6 +2568,23 @@ tbody tr:hover {
 
   .filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topbar-actions {
+    width: 100%;
+  }
+
+  .search-input {
+    flex: 1;
   }
 }
 

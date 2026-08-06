@@ -22,6 +22,12 @@ export default function ProtectedRoute() {
 
   if (!user) return <Navigate to="/" replace state={{ from: location }} />;
 
+  // Email/password users must verify their email before accessing the app.
+  // Google accounts are always verified, so they pass through.
+  if (!user.emailVerified) {
+    return <Navigate to="/verification-required" replace />;
+  }
+
   const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL;
   const role = isAdmin ? 'Administrator' : (profile?.investorType || 'Investor');
   const homePath = getHomePath(role);

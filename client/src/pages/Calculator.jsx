@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Bar } from 'react-chartjs-2';
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Tooltip } from 'chart.js';
+import { motion } from 'framer-motion';
 import ProtectedLayout from '../components/ProtectedLayout';
 import { useAuth } from '../context/AuthContext';
 import { getProperties, saveAnalysis, saveReport } from '../utils/propertyStorage';
@@ -17,6 +18,8 @@ const emptyForm = {
   loanYears: '',
 };
 ChartJS.register(BarElement, CategoryScale, Legend, LinearScale, Tooltip);
+
+const fmtNaira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
 export default function Calculator() {
   const { user, profile } = useAuth();
@@ -238,19 +241,34 @@ export default function Calculator() {
           </div>
 
           {result ? (
-            <>
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+              <div className="gauge-row">
+                <div className="gauge-card">
+                  <strong>{result.roi.toFixed(2)}%</strong>
+                  <span>ROI</span>
+                </div>
+                <div className="gauge-card">
+                  <strong>{result.investmentScore}/100</strong>
+                  <span>Investment Score</span>
+                </div>
+                <div className="gauge-card">
+                  <strong>{result.risk}</strong>
+                  <span>Risk Level</span>
+                </div>
+              </div>
+
               <div className="insight-list">
-                <div>Net Annual Income<strong>₦{result.netAnnualIncome.toLocaleString()}</strong></div>
-                <div>Cash Invested<strong>₦{result.cashInvested.toLocaleString()}</strong></div>
+                <div>Net Annual Income<strong>{fmtNaira(result.netAnnualIncome)}</strong></div>
+                <div>Cash Invested<strong>{fmtNaira(result.cashInvested)}</strong></div>
                 <div>ROI<strong>{result.roi.toFixed(2)}%</strong></div>
-                <div>Profit<strong>₦{result.profit.toLocaleString()}</strong></div>
+                <div>Profit<strong>{fmtNaira(result.profit)}</strong></div>
                 <div>Capital Gain %<strong>{result.capitalGainPct.toFixed(2)}%</strong></div>
-                <div>Estimated Monthly Cashflow<strong>₦{result.monthlyCashflow.toFixed(2)}</strong></div>
+                <div>Estimated Monthly Cashflow<strong>{fmtNaira(result.monthlyCashflow.toFixed(2))}</strong></div>
                 <div>Simple Payback Period<strong>{result.payback.toFixed(1)} years</strong></div>
                 <div>Cap Rate<strong>{result.capRate.toFixed(2)}%</strong></div>
                 <div>Rental Yield<strong>{result.rentalYield.toFixed(2)}%</strong></div>
                 <div>Cash on Cash Return<strong>{result.cashOnCash.toFixed(2)}%</strong></div>
-                <div>Monthly Profit<strong>₦{result.monthlyProfit.toFixed(2)}</strong></div>
+                <div>Monthly Profit<strong>{fmtNaira(result.monthlyProfit.toFixed(2))}</strong></div>
                 <div>Investment Score<strong>{result.investmentScore}/100 · {result.risk} risk</strong></div>
               </div>
 
@@ -265,7 +283,7 @@ export default function Calculator() {
                 <p className="eyebrow">Performance chart</p>
                 <Bar data={{ labels: ['ROI', 'Cap Rate', 'Rental Yield', 'Cash Return'], datasets: [{ label: 'Percent', data: [result.roi, result.capRate, result.rentalYield, result.cashOnCash], backgroundColor: ['#d4af37', '#f7e8b3', '#a98d5b', '#856404'] }] }} options={{ responsive: true, plugins: { legend: { labels: { color: '#e7dbc1' } } }, scales: { x: { ticks: { color: '#e7dbc1' } }, y: { ticks: { color: '#e7dbc1' } } } }} />
               </div>
-            </>
+            </motion.div>
           ) : (
             <p>Select a property, fill the details, and click Analyze Investment to see the metrics.</p>
           )}

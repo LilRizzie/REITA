@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import AuthLayout from '../components/AuthLayout';
+import GoogleButton from '../components/GoogleButton';
 import { useAuth } from '../context/AuthContext';
+import { getFirebaseErrorMessage } from '../utils/firebaseErrors';
 
 const investorTypes = ['Investor', 'Property Agent'];
+const ADMIN_EMAIL = 'britneyjacksonel@gmail.com';
 
 export default function Signup() {
-  const { user, signup, loading } = useAuth();
+  const { user, profile, signup, loginWithGoogle, resendVerificationEmail, logout, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: '',
@@ -18,14 +21,25 @@ export default function Signup() {
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
 
   useEffect(() => {
-    if (!loading && user) {
-      navigate('/dashboard', { replace: true });
+    if (!loading && user && user.emailVerified) {
+      const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL || profile?.investorType === 'Administrator';
+      navigate(isAdmin ? '/admin-dashboard' : '/dashboard', { replace: true });
     }
-  }, [loading, navigate, user]);
+  }, [loading, navigate, user, profile]);
+
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setTimeout(() => setResendCountdown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCountdown]);
 
   const validate = () => {
     const nextErrors = {};
@@ -53,17 +67,92 @@ export default function Signup() {
     setSubmitting(true);
 
     try {
-      await signup(form.fullName.trim(), form.email.trim(), form.password, form.investorType);
+      const result = await signup(form.fullName.trim(), form.email.trim(), form.password, form.investorType);
+      setVerificationEmail(result.email);
       toast.success('Account created. Please check your inbox to verify your email.');
-      navigate('/login', { replace: true });
     } catch (err) {
-      const message = err.message || 'Unable to create your account.';
+      const message = getFirebaseErrorMessage(err);
       setErrors((current) => ({ ...current, form: message }));
       toast.error(message);
     } finally {
       setSubmitting(false);
     }
   };
+
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    setErrors({});
+
+    try {
+      const credential = await loginWithGoogle();
+      toast.success('Google sign-in complete.');
+      const isAdmin = credential.user.email?.toLowerCase() === ADMIN_EMAIL;
+      navigate(isAdmin ? '/admin-dashboard' : '/dashboard', { replace: true });
+    } catch (err) {
+      const message = getFirebaseErrorMessage(err);
+      setErrors((current) => ({ ...current, form: message }));
+      toast.error(message);
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (resendCountdown > 0 || resending) return;
+    setResending(true);
+
+    try {
+      await resendVerificationEmail();
+      toast.success('Verification email sent.');
+      setResendCountdown(60);
+    } catch (err) {
+      const message = getFirebaseErrorMessage(err);
+      toast.error('Unable to send verification email.');
+      setErrors((current) => ({ ...current, form: message }));
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleGoToLogin = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
+  if (verificationEmail) {
+    return (
+      <AuthLayout title="Verify your email" subtitle="One more step to access your workspace.">
+        <div className="verification-card">
+          <div className="verification-icon" aria-hidden="true">✉</div>
+          <h2>Account created successfully.</h2>
+          <p>
+            A verification email has been sent to:
+          </p>
+          <strong className="verification-email">{verificationEmail}</strong>
+          <p>Please verify your email before logging in.</p>
+          <div className="verification-actions">
+            <button
+              type="button"
+              className="btn btn-primary auth-submit"
+              onClick={handleResendVerification}
+              disabled={resending || resendCountdown > 0}
+            >
+              {resending ? (
+                <span className="btn-spinner" aria-hidden="true" />
+              ) : resendCountdown > 0 ? (
+                `Resend Email (${resendCountdown})`
+              ) : (
+                'Resend Verification Email'
+              )}
+            </button>
+            <button type="button" className="btn btn-secondary auth-submit" onClick={handleGoToLogin}>
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout title="Create account" subtitle="Join REITA with a refined, secure sign-up experience.">
@@ -139,6 +228,12 @@ export default function Signup() {
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
+
+      <div className="auth-divider">
+        <span>or</span>
+      </div>
+
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} />
 
       <div className="auth-footer-links">
         <Link to="/login">Already have an account?</Link>

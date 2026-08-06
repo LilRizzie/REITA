@@ -166,7 +166,7 @@ export default function Reports() {
                       <td>{report.analysisDate || new Date(report.createdAt).toLocaleDateString()}</td>
                       <td>{report.generatedBy || report.userName || 'Investor'}</td>
                       <td>
-                        <button className="table-action" onClick={() => handleDownload(report)}>Download PDF</button>
+                        <button className="table-action download-btn" onClick={() => handleDownload(report)}>⬇ Download PDF</button>
                         <button className="table-action" onClick={() => handleDelete(report.id)}>Delete Report</button>
                       </td>
                     </tr>

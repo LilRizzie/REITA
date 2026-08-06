@@ -36,11 +36,6 @@ const saveProfile = (uid, data) => {
   window.localStorage.setItem(`reita-profile-${uid}`, JSON.stringify(data));
 };
 
-const clearStoredProfile = (uid) => {
-  if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(`reita-profile-${uid}`);
-};
-
 const clearAuthState = () => {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem('firebase:authUser');
@@ -102,17 +97,15 @@ export function AuthProvider({ children }) {
     saveProfile(currentUser.uid, profileData);
     saveUser(profileData);
     setProfile(profileData);
-    await firebaseSignOut(auth);
 
-    return { success: true };
+    return { success: true, email };
   };
 
   const login = async (email, password) => {
     const credential = await signInWithEmailAndPassword(auth, email, password);
 
     if (!credential.user.emailVerified) {
-      await firebaseSignOut(auth);
-      throw new Error('Please verify your email before continuing.');
+      throw new Error('Your email has not been verified. Please check your inbox.');
     }
 
     return credential;
@@ -138,7 +131,6 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    const currentUser = auth.currentUser;
     await firebaseSignOut(auth);
 
     setUser(null);
@@ -152,6 +144,17 @@ export function AuthProvider({ children }) {
     await sendPasswordResetEmail(auth, email);
   };
 
+  const resendVerificationEmail = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error('No user is currently signed in.');
+    await sendEmailVerification(currentUser);
+  };
+
+  const isEmailVerified = () => {
+    const currentUser = auth.currentUser;
+    return Boolean(currentUser?.emailVerified);
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -162,6 +165,8 @@ export function AuthProvider({ children }) {
       loginWithGoogle,
       logout,
       resetPassword,
+      resendVerificationEmail,
+      isEmailVerified,
     }),
     [loading, profile, user]
   );

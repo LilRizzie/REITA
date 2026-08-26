@@ -60,10 +60,10 @@ body {
   place-items: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #d4af37, #f7e8b3);
-  color: #111;
-  font-weight: 800;
+  border-radius: 0.6rem;
+  background: #111 url('/reita-favicon.svg') center / cover no-repeat;
+  color: transparent;
+  font-size: 0;
 }
 
 .nav-links {

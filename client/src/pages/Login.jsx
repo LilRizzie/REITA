@@ -43,6 +43,19 @@ export default function Login() {
       const target = isAdmin ? '/admin-dashboard' : (from || '/dashboard');
       navigate(target, { replace: true });
     } catch (err) {
+      if (err.code === 'EMAIL_NOT_VERIFIED') {
+        try {
+          await resendVerificationEmail(err.verificationEmail || form.email.trim());
+        } catch {
+          // Keep the sign-in screen quiet when delivery is unavailable.
+        }
+        setError('');
+        setErrorCode('');
+        setResendMessage('');
+        navigate('/login', { replace: true });
+        return;
+      }
+
       const message = getAuthErrorMessage(err);
       setError(message);
       setErrorCode(err.code || '');

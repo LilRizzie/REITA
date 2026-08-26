@@ -8,7 +8,7 @@ export default function ProfileMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const role = user?.role || profile?.investorType || 'Investor';
-  const displayName = profile?.fullName || 'Investor';
+  const displayName = user?.fullName || user?.displayName || profile?.fullName || 'Investor';
 
   useEffect(() => {
     const handleClick = (event) => {

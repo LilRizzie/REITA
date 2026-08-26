@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const {
-  sendVerificationOtpEmail,
   sendEmailVerificationLinkEmail,
   sendPasswordResetOtpEmail,
 } = require('../services/emailService');
@@ -16,6 +15,7 @@ const OTP_MAX_ATTEMPTS = 5;
 const OTP_LENGTH = 6;
 const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60 * 1000;
 const FRONTEND_URL = (
   process.env.FRONTEND_URL
   || process.env.VITE_FRONTEND_URL
@@ -47,8 +47,17 @@ const normalizeUser = (user) => ({
   updatedAt: user.updatedAt,
 });
 
+const redirectVerificationResult = (res, status) => {
+  if (!FRONTEND_URL) {
+    return false;
+  }
+
+  res.redirect(`${FRONTEND_URL}/verify-email?status=${status}`);
+  return true;
+};
+
 // ------------------------------------------------------------
-// OTP HELPERS
+// OTP HELPERS (password reset only)
 // ------------------------------------------------------------
 
 /**
@@ -77,43 +86,6 @@ const verifyOtpHash = (otp, hash) => bcrypt.compare(otp, hash);
 const isResendCooldownActive = (resendAt) => {
   if (!resendAt) return false;
   return Date.now() < new Date(resendAt).getTime();
-};
-
-/**
- * Generate, store (hashed), and send a verification OTP for a user.
- * The OTP is never returned. The email service verifies delivery and throws on failure.
- */
-const issueEmailVerificationOtp = async (user) => {
-  const otp = generateOtp();
-  const otpHash = await hashOtp(otp);
-  const previousOtpState = {
-    emailOtpHash: user.emailOtpHash,
-    emailOtpExpires: user.emailOtpExpires,
-    emailOtpAttempts: user.emailOtpAttempts,
-    emailOtpResendAt: user.emailOtpResendAt,
-  };
-
-  user.emailOtpHash = otpHash;
-  user.emailOtpExpires = new Date(Date.now() + OTP_TTL_MS);
-  user.emailOtpAttempts = 0;
-  user.emailOtpResendAt = new Date(Date.now() + OTP_RESEND_COOLDOWN_MS);
-  await user.save();
-
-  try {
-    await sendVerificationOtpEmail(user.email, otp, OTP_TTL_MS / 60000);
-    return null; // Email sent successfully
-  } catch (error) {
-    Object.assign(user, previousOtpState);
-    await user.save();
-
-    const emailError = new Error(
-      error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED'
-        ? 'Email provider is not configured.'
-        : error.message || 'Email provider rejected the verification email.'
-    );
-    emailError.code = error.code || 'EMAIL_SEND_FAILED';
-    throw emailError;
-  }
 };
 
 /**
@@ -303,6 +275,16 @@ const login = async (req, res) => {
     }
 
     user.lastActive = new Date();
+
+    if (!user.emailVerified && user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Please verify your email before signing in.',
+        code: 'EMAIL_NOT_VERIFIED',
+        verificationEmail: user.email,
+      });
+    }
+
     await user.save();
 
     const token = createToken(user);
@@ -322,7 +304,7 @@ const login = async (req, res) => {
 };
 
 // ------------------------------------------------------------
-// EMAIL VERIFICATION OTP
+// EMAIL VERIFICATION LINK
 // ------------------------------------------------------------
 
 const verifyEmail = async (req, res) => {
@@ -330,6 +312,7 @@ const verifyEmail = async (req, res) => {
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') {
+      if (redirectVerificationResult(res, 'invalid')) return;
       return res.status(400).json({
         success: false,
         message: 'Email verification token is required.',
@@ -341,6 +324,7 @@ const verifyEmail = async (req, res) => {
     const user = await User.findOne({ emailVerificationTokenHash: tokenHash });
 
     if (!user || !user.emailVerificationTokenExpires) {
+      if (redirectVerificationResult(res, 'invalid')) return;
       return res.status(400).json({
         success: false,
         message: 'This verification link is invalid or has expired.',
@@ -349,6 +333,7 @@ const verifyEmail = async (req, res) => {
     }
 
     if (new Date(user.emailVerificationTokenExpires).getTime() < Date.now()) {
+      if (redirectVerificationResult(res, 'expired')) return;
       return res.status(400).json({
         success: false,
         message: 'This verification link is invalid or has expired.',
@@ -359,14 +344,13 @@ const verifyEmail = async (req, res) => {
     user.emailVerified = true;
     user.emailVerificationTokenHash = null;
     user.emailVerificationTokenExpires = null;
+    user.emailVerificationResendAt = null;
     await user.save();
 
-    return res.status(200).json({
-      success: true,
-      message: 'Email verified successfully.',
-    });
+    return res.redirect(`${FRONTEND_URL}/verify-email?status=success`);
   } catch (error) {
     console.error('Verify email link error:', error.message);
+    if (redirectVerificationResult(res, 'invalid')) return;
     return res.status(500).json({
       success: false,
       message: 'Server error during email verification.',
@@ -374,96 +358,7 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-const verifyEmailOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and verification code are required.',
-      });
-    }
-
-    const normalizedEmail = normalizeEmail(email);
-    const user = await User.findOne({ email: normalizedEmail }).select('+emailOtpHash');
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'No account found with this email.',
-      });
-    }
-
-    if (user.emailVerified) {
-      return res.status(200).json({
-        success: true,
-        message: 'Email is already verified.',
-        user: normalizeUser(user),
-      });
-    }
-
-    if (!user.emailOtpHash || !user.emailOtpExpires) {
-      return res.status(400).json({
-        success: false,
-        message: 'No verification code has been issued. Please request a new one.',
-        code: 'NO_VERIFICATION_OTP',
-      });
-    }
-
-    if (new Date(user.emailOtpExpires).getTime() < Date.now()) {
-      return res.status(400).json({
-        success: false,
-        message: 'This verification code has expired. Please request a new one.',
-        code: 'VERIFICATION_OTP_EXPIRED',
-      });
-    }
-
-    if (user.emailOtpAttempts >= OTP_MAX_ATTEMPTS) {
-      return res.status(429).json({
-        success: false,
-        message: 'Too many incorrect attempts. Please request a new code.',
-        code: 'VERIFICATION_OTP_TOO_MANY_ATTEMPTS',
-      });
-    }
-
-    const isValid = await verifyOtpHash(otp, user.emailOtpHash);
-
-    if (!isValid) {
-      user.emailOtpAttempts = (user.emailOtpAttempts || 0) + 1;
-      await user.save();
-      return res.status(400).json({
-        success: false,
-        message: 'Incorrect verification code. Please try again.',
-        code: 'INVALID_VERIFICATION_OTP',
-      });
-    }
-
-    user.emailVerified = true;
-    user.emailOtpHash = null;
-    user.emailOtpExpires = null;
-    user.emailOtpAttempts = 0;
-    user.emailOtpResendAt = null;
-    await user.save();
-
-    const token = createToken(user);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Email verified successfully.',
-      token,
-      user: normalizeUser(user),
-    });
-  } catch (error) {
-    console.error('Verify email OTP error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error during email verification.',
-    });
-  }
-};
-
-const resendEmailOtp = async (req, res) => {
+const resendEmailVerification = async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -478,51 +373,53 @@ const resendEmailOtp = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'No account found with this email.',
+      return res.status(200).json({
+        success: true,
+        message: 'If that email is eligible, a verification link has been sent.',
       });
     }
 
     if (user.emailVerified) {
       return res.status(200).json({
         success: true,
-        message: 'Email is already verified.',
+        message: 'If that email is eligible, a verification link has been sent.',
       });
     }
 
-    if (isResendCooldownActive(user.emailOtpResendAt)) {
+    if (isResendCooldownActive(user.emailVerificationResendAt)) {
       const waitSeconds = Math.ceil(
-        (new Date(user.emailOtpResendAt).getTime() - Date.now()) / 1000
+        (new Date(user.emailVerificationResendAt).getTime() - Date.now()) / 1000
       );
       return res.status(429).json({
         success: false,
         message: `Please wait ${waitSeconds} seconds before requesting a new code.`,
-        code: 'OTP_RESEND_TOO_SOON',
+        code: 'RESEND_COOLDOWN',
         waitSeconds,
       });
     }
 
-    await issueEmailVerificationOtp(user);
+    await issueEmailVerificationLink(user);
 
     return res.status(200).json({
       success: true,
-      message: 'A new verification code has been sent to your email.',
+      message: 'A new verification link has been sent to your email.',
     });
   } catch (error) {
-    console.error('Resend email OTP error:', error.message);
-    if (error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED' || error.code === 'EMAIL_SEND_FAILED') {
+    console.error('Resend email verification error:', error.message);
+    if (error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED' || error.code === 'EMAIL_SEND_FAILED' || error.code === 'EMAIL_VERIFICATION_URL_NOT_CONFIGURED') {
       return res.status(500).json({
         success: false,
         message: error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED'
           ? 'Email provider is not configured.'
-          : 'Unable to send the verification code. Please try again.',
+          : error.code === 'EMAIL_VERIFICATION_URL_NOT_CONFIGURED'
+            ? 'Frontend URL is not configured for email verification links.'
+            : 'Unable to send the verification email. Please try again.',
         code: error.code,
       });
     }
     return res.status(500).json({
       success: false,
-      message: 'Server error while resending verification code.',
+      message: 'Server error while resending verification email.',
     });
   }
 };
@@ -819,8 +716,7 @@ module.exports = {
   signup,
   login,
   verifyEmail,
-  verifyEmailOtp,
-  resendEmailOtp,
+  resendEmailVerification,
   forgotPassword,
   verifyPasswordResetOtp,
   resendPasswordResetOtp,
@@ -843,6 +739,7 @@ const issueEmailVerificationLink = async (user) => {
   const rawToken = crypto.randomBytes(32).toString('hex');
   user.emailVerificationTokenHash = hashEmailVerificationToken(rawToken);
   user.emailVerificationTokenExpires = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS);
+  user.emailVerificationResendAt = new Date(Date.now() + EMAIL_VERIFICATION_RESEND_COOLDOWN_MS);
   await user.save();
 
   const verificationUrl = `${FRONTEND_URL}/verify-email?token=${encodeURIComponent(rawToken)}`;
@@ -852,6 +749,7 @@ const issueEmailVerificationLink = async (user) => {
   } catch (error) {
     user.emailVerificationTokenHash = null;
     user.emailVerificationTokenExpires = null;
+    user.emailVerificationResendAt = null;
     await user.save();
 
     const emailError = new Error(

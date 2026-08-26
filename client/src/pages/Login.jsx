@@ -6,13 +6,16 @@ import { useAuth } from '../context/AuthContext';
 import { getAuthErrorMessage } from '../utils/authErrors';
 
 export default function Login() {
-  const { user, login, loading } = useAuth();
+  const { user, login, resendVerificationEmail, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   useEffect(() => {
     if (!loading && user) {
@@ -29,6 +32,7 @@ export default function Login() {
     event.preventDefault();
     setSubmitting(true);
     setError('');
+    setErrorCode('');
 
     try {
       const result = await login(form.email.trim(), form.password);
@@ -41,6 +45,8 @@ export default function Login() {
     } catch (err) {
       const message = getAuthErrorMessage(err);
       setError(message);
+      setErrorCode(err.code || '');
+      setResendMessage('');
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -51,6 +57,30 @@ export default function Login() {
     <AuthLayout title="Welcome back" subtitle="Sign in to continue your investment workflow.">
       <form className="auth-form" onSubmit={handleSubmit}>
         {error ? <div className="auth-message auth-message--error">{error}</div> : null}
+        {errorCode === 'EMAIL_NOT_VERIFIED' ? (
+          <>
+            {resendMessage ? <div className="auth-message auth-message--success">{resendMessage}</div> : null}
+            <button
+              type="button"
+              className="btn btn-secondary auth-submit"
+              disabled={resending}
+              onClick={async () => {
+                setResending(true);
+                setResendMessage('');
+                try {
+                  await resendVerificationEmail(form.email.trim());
+                  setResendMessage('A new verification link has been sent.');
+                } catch (err) {
+                  setResendMessage(getAuthErrorMessage(err));
+                } finally {
+                  setResending(false);
+                }
+              }}
+            >
+              {resending ? 'Sending…' : 'Resend verification email'}
+            </button>
+          </>
+        ) : null}
 
         <label>
           <span>Email</span>

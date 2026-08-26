@@ -3,8 +3,7 @@ const {
   signup,
   login,
   verifyEmail,
-  verifyEmailOtp,
-  resendEmailOtp,
+  resendEmailVerification,
   forgotPassword,
   verifyPasswordResetOtp,
   resendPasswordResetOtp,
@@ -18,8 +17,7 @@ const router = express.Router();
 router.post('/signup', signup);
 router.post('/login', login);
 router.get('/verify-email', verifyEmail);
-router.post('/verify-email-otp', verifyEmailOtp);
-router.post('/resend-email-otp', resendEmailOtp);
+router.post('/resend-verification-email', resendEmailVerification);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-password-reset-otp', verifyPasswordResetOtp);
 router.post('/resend-password-reset-otp', resendPasswordResetOtp);

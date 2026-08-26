@@ -12,10 +12,35 @@ export default function Reports() {
   const confirm = useConfirm();
   const isAdmin = user?.role === 'Administrator' || profile?.investorType === 'Administrator';
   const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!user?.uid) return;
-    setReports(isAdmin ? getAllReports() : getReports(user.uid));
+    let active = true;
+
+    async function loadReports() {
+      if (!user?.uid) return;
+      setLoading(true);
+      setError('');
+
+      try {
+        const result = isAdmin ? await getAllReports() : await getReports(user.uid);
+        if (active) setReports(Array.isArray(result) ? result : []);
+      } catch (fetchError) {
+        if (active) {
+          setReports([]);
+          setError(fetchError.message || 'Unable to load reports.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadReports();
+
+    return () => {
+      active = false;
+    };
   }, [user?.uid, isAdmin]);
 
   async function handleDelete(id) {
@@ -25,9 +50,14 @@ export default function Reports() {
       danger: true,
     });
     if (!confirmed) return;
-    deleteReport(user.uid, id);
-    setReports(isAdmin ? getAllReports() : getReports(user.uid));
-    toast.success('Report deleted.');
+    try {
+      await deleteReport(user.uid, id);
+      const refreshedReports = isAdmin ? await getAllReports() : await getReports(user.uid);
+      setReports(Array.isArray(refreshedReports) ? refreshedReports : []);
+      toast.success('Report deleted.');
+    } catch (error) {
+      toast.error(error.message || 'Unable to delete report.');
+    }
   }
 
   function handleDownload(report) {
@@ -147,7 +177,17 @@ export default function Reports() {
             </div>
           </div>
 
-          {reports.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <h4>Loading reports...</h4>
+              <p>Your generated analyses will appear here shortly.</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state error-state" role="alert">
+              <h4>Reports could not be loaded</h4>
+              <p>{error}</p>
+            </div>
+          ) : reports.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📄</div>
               <h4>No reports generated yet</h4>

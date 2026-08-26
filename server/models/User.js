@@ -58,6 +58,11 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
+    emailVerificationResendAt: {
+      type: Date,
+      default: null,
+    },
+
     // Short-lived, single-use token for password reset.
     passwordSetupToken: {
       type: String,

@@ -391,7 +391,7 @@ export default function Dashboard() {
 
           <h3>
             Welcome back,{' '}
-            {profile?.fullName || 'User'}
+            {user?.fullName || user?.displayName || profile?.fullName || 'User'}
           </h3>
 
           <p>

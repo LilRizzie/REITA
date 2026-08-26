@@ -7,7 +7,7 @@ import { getAuthErrorMessage } from '../utils/authErrors';
 
 const investorTypes = ['Investor', 'Property Agent'];
 export default function Signup() {
-  const { user, signup, loading } = useAuth();
+  const { user, signup, resendVerificationEmail, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     fullName: '',
@@ -20,6 +20,9 @@ export default function Signup() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   useEffect(() => {
     if (!loading && user) {
@@ -55,8 +58,8 @@ export default function Signup() {
 
     try {
       await signup(form.fullName.trim(), form.email.trim(), form.password, form.investorType);
-      toast.success('Account created. Check your email and click the confirmation link, then sign in.');
-      navigate('/login', { replace: true });
+      setVerificationEmail(form.email.trim().toLowerCase());
+      toast.success('Account created. Check your email for a verification link.');
     } catch (err) {
       const message = getAuthErrorMessage(err);
       setErrors((current) => ({ ...current, form: message }));
@@ -67,7 +70,40 @@ export default function Signup() {
   };
 
   return (
-    <AuthLayout title="Create account" subtitle="Join REITA with a refined, secure sign-up experience.">
+    <AuthLayout title={verificationEmail ? 'Check your email' : 'Create account'} subtitle="Join REITA with a refined, secure sign-up experience.">
+      {verificationEmail ? (
+        <div className="auth-form">
+          <div className="auth-message auth-message--success">Account created successfully.</div>
+          <div className="verification-card">
+            <h2>Verify your email to continue.</h2>
+            <p>We've sent a verification link to:</p>
+            <strong className="verification-email">{verificationEmail}</strong>
+            <p>Please check your inbox and click the link to activate your REITA account. The link expires in 24 hours.</p>
+          </div>
+          {resendMessage ? <div className="auth-message auth-message--success">{resendMessage}</div> : null}
+          <button
+            type="button"
+            className="btn btn-secondary auth-submit"
+            disabled={resending}
+            onClick={async () => {
+              setResending(true);
+              setResendMessage('');
+              try {
+                await resendVerificationEmail(verificationEmail);
+                setResendMessage('A new verification link has been sent.');
+              } catch (err) {
+                setResendMessage(getAuthErrorMessage(err));
+              } finally {
+                setResending(false);
+              }
+            }}
+          >
+            {resending ? 'Sending…' : 'Resend verification email'}
+          </button>
+          <Link className="btn btn-primary auth-submit" to="/login">Continue to login</Link>
+        </div>
+      ) : null}
+      {!verificationEmail ? (
       <form className="auth-form" onSubmit={handleSubmit}>
         {errors.form ? <div className="auth-message auth-message--error">{errors.form}</div> : null}
 
@@ -140,6 +176,7 @@ export default function Signup() {
           {submitting ? 'Creating account…' : 'Create account'}
         </button>
       </form>
+      ) : null}
 
       <div className="auth-footer-links">
         <Link to="/login">Already have an account?</Link>

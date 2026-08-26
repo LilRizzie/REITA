@@ -148,12 +148,12 @@ const sendVerificationOtpEmail = async (to, otp, expiresInMinutes) => {
 
 const sendEmailVerificationLinkEmail = async (to, verificationUrl) => {
   const subject = 'Confirm your REITA email address';
-  const text = `Confirm your REITA email address by opening this link:\n\n${verificationUrl}\n\nThis link expires in 24 hours.`;
+  const text = `Verify your REITA email address by opening this link:\n\n${verificationUrl}\n\nThis link expires in 24 hours. If you did not create this account, you can safely ignore this email.`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; background: #0a0a0a; color: #f6efe1; border-radius: 12px;">
       <h2 style="color: #d4af37; margin: 0 0 16px;">REITA</h2>
-      <p>Confirm your email address to finish creating your REITA account.</p>
-      <p><a href="${verificationUrl}" style="display: inline-block; padding: 12px 18px; color: #0a0a0a; background: #d4af37; text-decoration: none; border-radius: 6px;">Confirm email</a></p>
+      <p>Verify your email address to finish creating your REITA account.</p>
+      <p><a href="${verificationUrl}" style="display: inline-block; padding: 12px 18px; color: #0a0a0a; background: #d4af37; text-decoration: none; border-radius: 6px;">Verify Email</a></p>
       <p style="color: #8f8568; font-size: 13px; margin-top: 24px;">This link expires in 24 hours. If you did not create this account, you can safely ignore this email.</p>
     </div>
   `;

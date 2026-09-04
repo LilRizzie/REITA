@@ -60,10 +60,10 @@ body {
   place-items: center;
   width: 2rem;
   height: 2rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #d4af37, #f7e8b3);
-  color: #111;
-  font-weight: 800;
+  border-radius: 0.6rem;
+  background: #111 url('/reita-favicon.svg') center / cover no-repeat;
+  color: transparent;
+  font-size: 0;
 }
 
 .nav-links {
@@ -274,7 +274,7 @@ body {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
   width: 100%;
   align-items: start;
@@ -1310,6 +1310,11 @@ body {
   position: sticky;
   top: 32px;
   z-index: 10;
+  padding: 1rem 1.15rem;
+  background: #12120f;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 1rem;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.34);
 }
 
 .topbar-left {
@@ -1333,6 +1338,7 @@ body {
   align-items: center;
   gap: 0.7rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .search-input {
@@ -1341,8 +1347,8 @@ body {
   gap: 0.55rem;
   padding: 0.75rem 0.95rem;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1b1b16;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   min-width: 240px;
 }
 
@@ -1377,12 +1383,48 @@ body {
 
 .profile-pill {
   display: grid;
-  justify-items: end;
+  grid-template-columns: auto auto;
+  grid-template-areas: "avatar name" "avatar role";
+  align-items: center;
+  column-gap: 0.55rem;
+  row-gap: 0.08rem;
+  min-width: 150px;
+  padding: 0.35rem 0.65rem 0.35rem 0.4rem;
+  border-radius: 999px;
   color: #e8d5a2;
-  background: transparent;
-  border: none;
-  padding: 0;
+  background: #1b1b16;
+  border: 1px solid rgba(212, 175, 55, 0.25);
   cursor: pointer;
+}
+
+.profile-pill .mini-avatar {
+  grid-area: avatar;
+}
+
+.profile-pill strong,
+.profile-pill span {
+  justify-self: start;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-pill strong {
+  grid-area: name;
+  font-size: 0.88rem;
+}
+
+.profile-pill span {
+  grid-area: role;
+  color: #b9ad8d;
+  font-size: 0.72rem;
+}
+
+.profile-pill:hover,
+.profile-pill:focus-visible {
+  border-color: rgba(212, 175, 55, 0.65);
+  outline: none;
 }
 
 .dropdown-menu {
@@ -1645,6 +1687,24 @@ tbody tr:hover {
   transform: translateY(-1px);
 }
 
+.dashboard-main .content-panel > .stats-grid {
+  gap: 12px;
+}
+
+.dashboard-main .content-panel > .stats-grid .metric-card {
+  background: transparent;
+  border: 0;
+  border-left: 2px solid rgba(212, 175, 55, 0.45);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.5rem 1rem;
+}
+
+.dashboard-main .content-panel > .stats-grid .metric-card:hover {
+  transform: none;
+  border-color: rgba(212, 175, 55, 0.75);
+}
+
 .action-stack {
   display: grid;
   gap: 0.75rem;
@@ -1681,14 +1741,14 @@ tbody tr:hover {
 }
 
 .calculator-shell {
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   align-items: start;
 }
 
 .profile-grid {
   display: grid;
   gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   align-items: start;
 }
 
@@ -3269,5 +3329,80 @@ select option:hover,
   th,
   td {
     padding: 0.7rem 0.5rem;
+  }
+}
+
+html[data-theme='light'] body {
+  background: #f4f1e8;
+  color: #25231f;
+}
+
+html[data-theme='light'] .app-shell {
+  background: linear-gradient(135deg, #f7f4ec 0%, #ece7d9 100%);
+}
+
+html[data-theme='light'] .glass-card {
+  background: rgba(255, 255, 255, 0.76);
+  border-color: rgba(43, 39, 30, 0.12);
+  box-shadow: 0 14px 34px rgba(64, 54, 32, 0.1);
+}
+
+html[data-theme='light'] .premium-panel,
+html[data-theme='light'] .hero-panel {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 255, 255, 0.76));
+}
+
+html[data-theme='light'] .premium-panel h3,
+html[data-theme='light'] .card-head h4,
+html[data-theme='light'] .metric-card h3,
+html[data-theme='light'] .breadcrumb-row strong {
+  color: #25231f;
+}
+
+html[data-theme='light'] .premium-panel p,
+html[data-theme='light'] .muted,
+html[data-theme='light'] .breadcrumb-row,
+html[data-theme='light'] th,
+html[data-theme='light'] td {
+  color: #625d51;
+}
+
+html[data-theme='light'] .sidebar-link {
+  color: #4f4a40;
+}
+
+html[data-theme='light'] .sidebar-link.active,
+html[data-theme='light'] .sidebar-link:hover {
+  color: #5e4912;
+}
+
+html[data-theme='light'] thead {
+  background: rgba(247, 244, 236, 0.96);
+}
+
+html[data-theme='light'] .search-input,
+html[data-theme='light'] .action-btn {
+  background: rgba(43, 39, 30, 0.04);
+  border-color: rgba(43, 39, 30, 0.14);
+  color: #25231f;
+}
+
+@media (max-width: 720px) {
+  .dashboard-topbar {
+    padding: 1rem;
+  }
+
+  .topbar-actions,
+  .form-actions,
+  .table-action {
+    max-width: 100%;
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .table-action {
+    white-space: normal;
   }
 }

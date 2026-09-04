@@ -12,8 +12,10 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [errorCode, setErrorCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
 
   useEffect(() => {
     if (!loading && user) {
@@ -30,6 +32,7 @@ export default function Login() {
     event.preventDefault();
     setSubmitting(true);
     setError('');
+    setErrorCode('');
 
     try {
       const result = await login(form.email.trim(), form.password);
@@ -40,8 +43,23 @@ export default function Login() {
       const target = isAdmin ? '/admin-dashboard' : (from || '/dashboard');
       navigate(target, { replace: true });
     } catch (err) {
+      if (err.code === 'EMAIL_NOT_VERIFIED') {
+        try {
+          await resendVerificationEmail(err.verificationEmail || form.email.trim());
+        } catch {
+          // Keep the sign-in screen quiet when delivery is unavailable.
+        }
+        setError('');
+        setErrorCode('');
+        setResendMessage('');
+        navigate('/login', { replace: true });
+        return;
+      }
+
       const message = getAuthErrorMessage(err);
       setError(message);
+      setErrorCode(err.code || '');
+      setResendMessage('');
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -67,10 +85,29 @@ export default function Login() {
     <AuthLayout title="Welcome back" subtitle="Sign in to continue your investment workflow.">
       <form className="auth-form" onSubmit={handleSubmit}>
         {error ? <div className="auth-message auth-message--error">{error}</div> : null}
-        {error && error.includes('verify your email') ? (
-          <button type="button" className="btn btn-secondary auth-submit" onClick={handleResendVerification} disabled={resending}>
-            {resending ? 'Sending…' : 'Resend verification link'}
-          </button>
+        {errorCode === 'EMAIL_NOT_VERIFIED' ? (
+          <>
+            {resendMessage ? <div className="auth-message auth-message--success">{resendMessage}</div> : null}
+            <button
+              type="button"
+              className="btn btn-secondary auth-submit"
+              disabled={resending}
+              onClick={async () => {
+                setResending(true);
+                setResendMessage('');
+                try {
+                  await resendVerificationEmail(form.email.trim());
+                  setResendMessage('A new verification link has been sent.');
+                } catch (err) {
+                  setResendMessage(getAuthErrorMessage(err));
+                } finally {
+                  setResending(false);
+                }
+              }}
+            >
+              {resending ? 'Sending…' : 'Resend verification email'}
+            </button>
+          </>
         ) : null}
 
         <label>

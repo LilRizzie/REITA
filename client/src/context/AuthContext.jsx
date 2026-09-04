@@ -3,7 +3,9 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 const AuthContext = createContext(null);
 
 const API_URL = (
-  import.meta.env.VITE_API_URL || 'https://reita-backend-deployment.onrender.com'
+  import.meta.env.DEV
+    ? 'http://localhost:5000'
+    : (import.meta.env.VITE_API_URL || 'https://reita-backend-deployment.onrender.com')
 ).replace(/\/+$/, '');
 
 const TOKEN_KEY = 'reita_token';
@@ -415,19 +417,16 @@ export function AuthProvider({ children }) {
   };
 
   // --------------------------------------------------
-  // EMAIL VERIFICATION
+  // RESEND EMAIL VERIFICATION LINK
   // --------------------------------------------------
 
-  const resendVerificationEmail = async (
-    email
-  ) => {
+  const resendVerificationEmail = async (email) => {
     const data = await backendRequest(
-      '/api/auth/resend-email-verification',
+      '/api/auth/resend-verification-email',
       {
         email,
       }
     );
-
     return data;
   };
 

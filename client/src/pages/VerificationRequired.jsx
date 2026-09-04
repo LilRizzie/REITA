@@ -72,9 +72,9 @@ export default function VerificationRequired() {
           {resending ? (
             <span className="btn-spinner" aria-hidden="true" />
           ) : resendCountdown > 0 ? (
-            `Resend Code (${resendCountdown})`
+            `Resend Email (${resendCountdown})`
           ) : (
-            'Resend Code'
+            'Resend verification email'
           )}
         </button>
 

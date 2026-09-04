@@ -6,17 +6,8 @@ import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Toolt
 import { motion } from 'framer-motion';
 import ProtectedLayout from '../components/ProtectedLayout';
 import { useAuth } from '../context/AuthContext';
-import { getProperties, saveAnalysis, saveReport } from '../utils/propertyStorage';
+import { getInvestmentProperties, getProperties, saveAnalysis, saveReport } from '../utils/propertyStorage';
 
-const emptyForm = {
-  purchasePrice: '',
-  currentValue: '',
-  annualRentalIncome: '',
-  annualExpenses: '',
-  loanAmount: '',
-  interestRate: '',
-  loanYears: '',
-};
 ChartJS.register(BarElement, CategoryScale, Legend, LinearScale, Tooltip);
 
 const fmtNaira = (n) => `₦${Number(n || 0).toLocaleString()}`;
@@ -24,9 +15,9 @@ const fmtNaira = (n) => `₦${Number(n || 0).toLocaleString()}`;
 export default function Calculator() {
   const { user, profile } = useAuth();
   const location = useLocation();
+  const isInvestor = (user?.role || profile?.investorType) === 'Investor';
   const [properties, setProperties] = useState([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState('');
-  const [form, setForm] = useState(emptyForm);
   const [result, setResult] = useState(null);
   const [recommendation, setRecommendation] = useState('');
 
@@ -34,8 +25,11 @@ export default function Calculator() {
     if (!user?.uid) return;
     let active = true;
 
-    // Properties now come from the MongoDB-backed API.
-    getProperties(user.uid)
+    const propertyRequest = isInvestor
+      ? getInvestmentProperties()
+      : getProperties(user.uid, user.role);
+
+    propertyRequest
       .then((saved) => {
         if (!active) return;
         setProperties(saved);
@@ -45,15 +39,6 @@ export default function Calculator() {
           const match = saved.find((item) => String(item.id) === String(preselected));
           if (match) {
             setSelectedPropertyId(match.id);
-            setForm({
-              purchasePrice: match.purchasePrice,
-              currentValue: match.currentValue,
-              annualRentalIncome: match.annualRent || match.annualRentalIncome || Number(match.monthlyRent || 0) * 12,
-              annualExpenses: match.annualExpenses,
-              loanAmount: match.loanAmount || match.mortgage || 0,
-              interestRate: match.interestRate || 0,
-              loanYears: match.loanYears || 0,
-            });
           }
         }
       })
@@ -62,43 +47,28 @@ export default function Calculator() {
       });
 
     return () => { active = false; };
-  }, [user?.uid, location.state?.propertyId]);
+  }, [user?.uid, user?.role, isInvestor, location.state?.propertyId]);
 
   const selectedProperty = useMemo(() => properties.find((item) => String(item.id) === String(selectedPropertyId)) || null, [properties, selectedPropertyId]);
-
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
 
   function handlePropertySelect(e) {
     const id = e.target.value;
     setSelectedPropertyId(id);
-    const match = properties.find((item) => String(item.id) === String(id));
-
-    if (match) {
-      setForm({
-        purchasePrice: match.purchasePrice,
-        currentValue: match.currentValue,
-        annualRentalIncome: match.annualRent || match.annualRentalIncome || Number(match.monthlyRent || 0) * 12,
-        annualExpenses: match.annualExpenses,
-        loanAmount: match.loanAmount || match.mortgage || 0,
-        interestRate: match.interestRate || 0,
-        loanYears: match.loanYears || 0,
-      });
-    }
+    setResult(null);
+    setRecommendation('');
   }
 
   function analyze() {
-    const purchasePrice = Number(form.purchasePrice);
-    const currentValue = Number(form.currentValue);
-    const rentalIncome = Number(form.annualRentalIncome);
-    const expenses = Number(form.annualExpenses);
-    const loanAmount = Number(form.loanAmount);
-    const interestRate = Number(form.interestRate);
-    const loanYears = Number(form.loanYears);
+    const purchasePrice = Number(selectedProperty?.purchasePrice || 0);
+    const currentValue = Number(selectedProperty?.currentValue || 0);
+    const rentalIncome = Number(selectedProperty?.expectedRentalIncome || selectedProperty?.annualRentalIncome || selectedProperty?.annualRent || 0);
+    const expenses = Number(selectedProperty?.annualExpenses || 0);
+    const loanAmount = Number(selectedProperty?.loanAmount || selectedProperty?.mortgage || 0);
+    const interestRate = Number(selectedProperty?.interestRate || 0);
+    const loanYears = Number(selectedProperty?.loanYears || 0);
 
-    if (!selectedPropertyId || !purchasePrice || !currentValue) {
-      toast.error('Select a property and provide purchase and current values.');
+    if (!selectedPropertyId || !selectedProperty || !purchasePrice || !currentValue) {
+      toast.error('Select an available property with complete valuation details.');
       return;
     }
 
@@ -190,9 +160,9 @@ export default function Calculator() {
 
           <div className="field-stack">
             <label>
-              <span>Select Property</span>
+              <span>Available Property</span>
               <select value={selectedPropertyId} onChange={handlePropertySelect}>
-                <option value="">Choose one of your properties</option>
+                <option value="">Choose an available property</option>
                 {properties.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.propertyName} — {item.city || item.state || ''}
@@ -201,40 +171,6 @@ export default function Calculator() {
               </select>
             </label>
 
-            <label>
-              <span>Purchase Price (₦)</span>
-              <input type="number" name="purchasePrice" value={form.purchasePrice} onChange={handleChange} />
-            </label>
-
-            <label>
-              <span>Current Value (₦)</span>
-              <input type="number" name="currentValue" value={form.currentValue} onChange={handleChange} />
-            </label>
-
-            <label>
-              <span>Annual Rental Income (₦)</span>
-              <input type="number" name="annualRentalIncome" value={form.annualRentalIncome} onChange={handleChange} />
-            </label>
-
-            <label>
-              <span>Annual Expenses (₦)</span>
-              <input type="number" name="annualExpenses" value={form.annualExpenses} onChange={handleChange} />
-            </label>
-
-            <label>
-              <span>Loan Amount (₦)</span>
-              <input type="number" name="loanAmount" value={form.loanAmount} onChange={handleChange} />
-            </label>
-
-            <label>
-              <span>Interest Rate (%)</span>
-              <input type="number" step="0.01" name="interestRate" value={form.interestRate} onChange={handleChange} />
-            </label>
-
-            <label>
-              <span>Loan Years</span>
-              <input type="number" name="loanYears" value={form.loanYears} onChange={handleChange} />
-            </label>
           </div>
 
           <div className="button-row">
@@ -296,7 +232,7 @@ export default function Calculator() {
               </div>
             </motion.div>
           ) : (
-            <p>Select a property, fill the details, and click Analyze Investment to see the metrics.</p>
+            <p>Select an available property and click Analyze Investment to see the metrics.</p>
           )}
         </div>
       </div>

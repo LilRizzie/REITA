@@ -12,11 +12,10 @@ const roleConfig = {
       'Each investment can be reviewed and refined from one streamlined workspace.',
       'Reports can be printed or downloaded instantly from the Reports page.',
     ],
-    quickActions: ['Add Property', 'Open Calculator', 'Generate Report'],
+    quickActions: ['Open Calculator', 'Generate Report'],
     navItems: [
       { label: 'Dashboard', path: '/dashboard' },
       { label: 'Available Investments', path: '/investments' },
-      { label: 'My Properties', path: '/properties' },
       { label: 'Calculator', path: '/calculator' },
       { label: 'Reports', path: '/reports' },
       { label: 'Profile', path: '/profile' },
@@ -78,7 +77,7 @@ export const getRoleLabel = (investorType) => investorType || 'Investor';
 
 export const roleRoutes = {
   Administrator: ['/admin-dashboard', '/users', '/properties', '/reports', '/analytics', '/settings', '/profile'],
-  Investor: ['/dashboard', '/investments', '/investments/compare', '/investments/:id', '/properties', '/calculator', '/reports', '/profile', '/settings'],
+  Investor: ['/dashboard', '/investments', '/investments/compare', '/investments/:id', '/calculator', '/reports', '/profile', '/settings'],
   'Property Agent': ['/dashboard', '/properties', '/listings', '/clients', '/reports', '/profile', '/settings'],
 };
 

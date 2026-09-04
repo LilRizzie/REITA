@@ -178,14 +178,13 @@ const signup = async (req, res) => {
         existingUser.role = selectedType;
       }
       existingUser.lastActive = new Date();
-      existingUser.emailVerified = false;
+      existingUser.emailVerified = true;
       await existingUser.save();
-      await issueEmailVerificationLink(existingUser);
 
       return res.status(200).json({
         success: true,
         user: normalizeUser(existingUser),
-        requiresEmailVerification: true,
+        requiresEmailVerification: false,
       });
     }
 
@@ -201,15 +200,14 @@ const signup = async (req, res) => {
       fullName: fullName.trim(),
       investorType: selectedType,
       role: selectedType,
-      emailVerified: false,
+      emailVerified: true,
       lastActive: new Date(),
     });
-    await issueEmailVerificationLink(user);
 
     return res.status(201).json({
       success: true,
       user: normalizeUser(user),
-      requiresEmailVerification: true,
+      requiresEmailVerification: false,
     });
   } catch (error) {
     console.error('Signup error:', error.message);

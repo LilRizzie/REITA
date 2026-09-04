@@ -42,6 +42,10 @@ app.get('/', (req, res) => {
   });
 });
 
+app.get("/ping", (req, res)=>{
+  res.status(201).json({message: "pingged successfully"})
+})
+
 const PORT = process.env.PORT || 5000 || 4600;
 
 mongoose

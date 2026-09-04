@@ -19,7 +19,7 @@ router.post('/signup', signup);
 router.post('/login', login);
 router.get('/verify-email', verifyEmail);
 router.post('/verify-email-otp', verifyEmailOtp);
-router.post('/resend-email-otp', resendEmailOtp);
+router.post('/resend-email-verification', resendEmailOtp);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-password-reset-otp', verifyPasswordResetOtp);
 router.post('/resend-password-reset-otp', resendPasswordResetOtp);

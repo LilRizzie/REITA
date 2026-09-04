@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import ProtectedLayout from '../components/ProtectedLayout';
 import { useAuth } from '../context/AuthContext';
-import { getAllReports, getAllUsers, getProperties } from '../utils/propertyStorage';
+import { getAllReports, getProperties } from '../utils/propertyStorage';
+import { apiRequest } from '../utils/api';
 
 const GOLD = '#d4af37';
 const GOLD_LIGHT = '#f7e8b3';
@@ -33,27 +34,47 @@ export default function Analytics() {
   const { user, profile } = useAuth();
   const [, refresh] = useState(0);
   const [properties, setProperties] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [reports, setReports] = useState([]);
   const isAdmin = user?.role === 'Administrator' || profile?.investorType === 'Administrator';
 
-  // Properties now come from the MongoDB-backed API. For admin users the
-  // backend returns all properties based on the verified JWT role.
   useEffect(() => {
     let active = true;
-    getProperties(user?.uid)
-      .then((list) => { if (active) setProperties(list); })
-      .catch(() => { if (active) setProperties([]); });
-    return () => { active = false; };
-  }, [user?.uid, refresh]);
 
-  const data = useMemo(() => {
-    const users = getAllUsers();
-    const reports = getAllReports();
-    return { users, reports, properties };
-  }, [user?.uid, refresh, properties]);
+    async function loadAnalytics() {
+      if (!user?.uid || !isAdmin) return;
+
+      try {
+        const [propertyList, reportList, usersResponse] = await Promise.all([
+          getProperties(user.uid),
+          getAllReports(),
+          apiRequest('/api/users'),
+        ]);
+        const usersData = await usersResponse.json();
+
+        if (!usersResponse.ok || !usersData.success) {
+          throw new Error(usersData.message || 'Unable to load users.');
+        }
+
+        if (active) {
+          setProperties(propertyList);
+          setReports(reportList);
+          setUsers(Array.isArray(usersData.users) ? usersData.users : []);
+        }
+      } catch {
+        if (active) {
+          setProperties([]);
+          setReports([]);
+          setUsers([]);
+        }
+      }
+    }
+
+    loadAnalytics();
+    return () => { active = false; };
+  }, [user?.uid, isAdmin, refresh]);
 
   if (!isAdmin) return null;
-
-  const { users, reports } = data;
 
   const investors = users.filter(u => u.role === 'Investor').length;
   const agents = users.filter(u => u.role === 'Property Agent').length;

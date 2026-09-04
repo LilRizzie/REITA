@@ -6,13 +6,14 @@ import { useAuth } from '../context/AuthContext';
 import { getAuthErrorMessage } from '../utils/authErrors';
 
 export default function Login() {
-  const { user, login, loading } = useAuth();
+  const { user, login, resendVerificationEmail, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     if (!loading && user) {
@@ -47,10 +48,30 @@ export default function Login() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      await resendVerificationEmail(form.email.trim());
+      setError('');
+      toast.success('A new verification link has been sent.');
+    } catch (err) {
+      const message = getAuthErrorMessage(err);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setResending(false);
+    }
+  };
+
   return (
     <AuthLayout title="Welcome back" subtitle="Sign in to continue your investment workflow.">
       <form className="auth-form" onSubmit={handleSubmit}>
         {error ? <div className="auth-message auth-message--error">{error}</div> : null}
+        {error && error.includes('verify your email') ? (
+          <button type="button" className="btn btn-secondary auth-submit" onClick={handleResendVerification} disabled={resending}>
+            {resending ? 'Sending…' : 'Resend verification link'}
+          </button>
+        ) : null}
 
         <label>
           <span>Email</span>

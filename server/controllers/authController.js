@@ -16,6 +16,7 @@ const OTP_MAX_ATTEMPTS = 5;
 const OTP_LENGTH = 6;
 const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_VERIFICATION_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
+const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 60 * 1000;
 const FRONTEND_URL = (
   process.env.FRONTEND_URL
   || process.env.VITE_FRONTEND_URL
@@ -206,14 +207,13 @@ const signup = async (req, res) => {
         existingUser.role = selectedType;
       }
       existingUser.lastActive = new Date();
-      existingUser.emailVerified = false;
+      existingUser.emailVerified = true;
       await existingUser.save();
-      await issueEmailVerificationLink(existingUser);
 
       return res.status(200).json({
         success: true,
         user: normalizeUser(existingUser),
-        requiresEmailVerification: true,
+        requiresEmailVerification: false,
       });
     }
 
@@ -229,34 +229,17 @@ const signup = async (req, res) => {
       fullName: fullName.trim(),
       investorType: selectedType,
       role: selectedType,
-      emailVerified: false,
+      emailVerified: true,
       lastActive: new Date(),
     });
-    await issueEmailVerificationLink(user);
 
     return res.status(201).json({
       success: true,
       user: normalizeUser(user),
-      requiresEmailVerification: true,
+      requiresEmailVerification: false,
     });
   } catch (error) {
     console.error('Signup error:', error.message);
-    // If the error is about email delivery failure, surface that message.
-    if (
-      error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED'
-      || error.code === 'EMAIL_SEND_FAILED'
-      || error.code === 'EMAIL_VERIFICATION_URL_NOT_CONFIGURED'
-    ) {
-      return res.status(500).json({
-        success: false,
-        message: error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED'
-          ? 'Email provider is not configured.'
-          : error.code === 'EMAIL_VERIFICATION_URL_NOT_CONFIGURED'
-            ? 'Frontend URL is not configured for email verification links.'
-          : error.message || 'Email provider rejected the verification email.',
-        code: error.code,
-      });
-    }
     return res.status(500).json({
       success: false,
       message: 'Server error during signup.',
@@ -322,7 +305,7 @@ const login = async (req, res) => {
 };
 
 // ------------------------------------------------------------
-// EMAIL VERIFICATION OTP
+// EMAIL VERIFICATION
 // ------------------------------------------------------------
 
 const verifyEmail = async (req, res) => {
@@ -491,38 +474,38 @@ const resendEmailOtp = async (req, res) => {
       });
     }
 
-    if (isResendCooldownActive(user.emailOtpResendAt)) {
+    if (isResendCooldownActive(user.emailVerificationResendAt)) {
       const waitSeconds = Math.ceil(
-        (new Date(user.emailOtpResendAt).getTime() - Date.now()) / 1000
+        (new Date(user.emailVerificationResendAt).getTime() - Date.now()) / 1000
       );
       return res.status(429).json({
         success: false,
-        message: `Please wait ${waitSeconds} seconds before requesting a new code.`,
-        code: 'OTP_RESEND_TOO_SOON',
+        message: `Please wait ${waitSeconds} seconds before requesting a new verification email.`,
+        code: 'VERIFICATION_RESEND_TOO_SOON',
         waitSeconds,
       });
     }
 
-    await issueEmailVerificationOtp(user);
+    await issueEmailVerificationLink(user);
 
     return res.status(200).json({
       success: true,
-      message: 'A new verification code has been sent to your email.',
+      message: 'A new verification link has been sent to your email.',
     });
   } catch (error) {
-    console.error('Resend email OTP error:', error.message);
+    console.error('Resend email verification link error:', error.message);
     if (error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED' || error.code === 'EMAIL_SEND_FAILED') {
       return res.status(500).json({
         success: false,
         message: error.code === 'EMAIL_PROVIDER_NOT_CONFIGURED'
           ? 'Email provider is not configured.'
-          : 'Unable to send the verification code. Please try again.',
+          : 'Unable to send the verification email. Please try again.',
         code: error.code,
       });
     }
     return res.status(500).json({
       success: false,
-      message: 'Server error while resending verification code.',
+      message: 'Server error while resending verification email.',
     });
   }
 };
@@ -843,6 +826,7 @@ const issueEmailVerificationLink = async (user) => {
   const rawToken = crypto.randomBytes(32).toString('hex');
   user.emailVerificationTokenHash = hashEmailVerificationToken(rawToken);
   user.emailVerificationTokenExpires = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_MS);
+  user.emailVerificationResendAt = new Date(Date.now() + EMAIL_VERIFICATION_RESEND_COOLDOWN_MS);
   await user.save();
 
   const verificationUrl = `${FRONTEND_URL}/verify-email?token=${encodeURIComponent(rawToken)}`;
@@ -852,6 +836,7 @@ const issueEmailVerificationLink = async (user) => {
   } catch (error) {
     user.emailVerificationTokenHash = null;
     user.emailVerificationTokenExpires = null;
+    user.emailVerificationResendAt = null;
     await user.save();
 
     const emailError = new Error(

@@ -55,7 +55,7 @@ export default function Signup() {
 
     try {
       await signup(form.fullName.trim(), form.email.trim(), form.password, form.investorType);
-      toast.success('Account created. Check your email and click the confirmation link, then sign in.');
+      toast.success('Account created successfully.');
       navigate('/login', { replace: true });
     } catch (err) {
       const message = getAuthErrorMessage(err);

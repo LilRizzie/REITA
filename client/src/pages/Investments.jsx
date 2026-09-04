@@ -32,6 +32,7 @@ function InvestmentCard({ property, onView, selected, onToggleCompare }) {
           <span className="status-badge status-available">{property.propertyStatus || property.status}</span>
         </div>
         <p className="property-location">{property.location || 'Location not provided'}</p>
+        {property.agentPhone ? <p className="property-location">Agent Contact: {property.agentPhone}</p> : null}
         <p className="investment-description">{property.description || 'A new opportunity listed on REITA.'}</p>
         <div className="investment-metrics-grid">
           <div><span>Purchase Price</span><strong>{formatMoney(property.purchasePrice)}</strong></div>

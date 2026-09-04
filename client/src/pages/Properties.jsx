@@ -190,6 +190,7 @@ export default function Properties() {
                 {p.images?.[0] ? <img className="property-card-image" src={p.images[0]} alt="" /> : null}
                 <p className="property-location">{p.location || p.city || p.state || p.address || 'Location not set'}</p>
                 {isAdmin && <p className="property-owner">Owner: {p.ownerName || '—'} ({p.ownerEmail || '—'})</p>}
+                {p.agentPhone ? <p className="property-owner">Agent Contact: {p.agentPhone}</p> : null}
                 <div className="property-card-metrics">
                   <div><span>Current Value</span><strong>{fmtNaira(p.currentValue)}</strong></div>
                   <div><span>Expected Rental Income</span><strong>{fmtNaira(p.expectedRentalIncome || p.annualRent)}</strong></div>
@@ -226,6 +227,7 @@ export default function Properties() {
               <label><span>Property Status</span><select name="propertyStatus" value={form.propertyStatus} onChange={change}>{statuses.map(s => <option key={s}>{s}</option>)}</select></label>
               <label className="full-width"><span>Image URL (optional)</span><input name="image" type="url" value={form.image || ''} onChange={change} placeholder="https://..." /></label>
               <label className="full-width"><span>Description</span><textarea name="description" value={form.description} onChange={change} rows="3" /></label>
+              {!editing.id && <label className="full-width"><span>Agent Contact Number</span><input name="agentPhone" type="tel" value={form.agentPhone || ''} onChange={change} placeholder="Enter your phone number" /></label>}
             </div>
             <div className="modal-actions">
               <button className="btn btn-secondary" type="button" onClick={() => { setEditing(null); setForm(blank); }}>Cancel</button>
@@ -248,6 +250,7 @@ export default function Properties() {
             <p><strong>Annual Expenses:</strong> {fmtNaira(view.annualExpenses)}</p>
             <p><strong>Expected Appreciation:</strong> {view.expectedAppreciation || view.appreciationRate || '0'}%</p>
             <p><strong>Status:</strong> {view.status}</p>
+            {view.agentPhone ? <p><strong>Agent Contact:</strong> {view.agentPhone}</p> : null}
             <p><strong>Added:</strong> {new Date(view.createdAt || Date.now()).toLocaleDateString()}</p>
             <p>{view.description || ''}</p>
             <div className="modal-actions">

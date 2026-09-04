@@ -369,11 +369,9 @@ export function AuthProvider({ children }) {
       }
     );
 
-    setPendingVerificationEmail('');
-
     return {
       ...data,
-      requiresEmailVerification: Boolean(data.requiresEmailVerification),
+      requiresEmailVerification: false,
     };
   };
 
@@ -417,53 +415,14 @@ export function AuthProvider({ children }) {
   };
 
   // --------------------------------------------------
-  // VERIFY EMAIL OTP
-  // --------------------------------------------------
-
-  const verifyEmailOtp = async (
-    email,
-    otp
-  ) => {
-    const data = await backendRequest(
-      '/api/auth/verify-email-otp',
-      {
-        email,
-        otp,
-      }
-    );
-
-    /*
-     * The backend creates the JWT ONLY after
-     * successful email verification.
-     */
-    if (data.token && data.user) {
-      const result = storeAuth(
-        data.token,
-        data.user
-      );
-
-      setUser(result.user);
-      setProfile(result.profile);
-      setPendingVerificationEmail('');
-
-      return {
-        ...result,
-        requiresEmailVerification: false,
-      };
-    }
-
-    return data;
-  };
-
-  // --------------------------------------------------
-  // RESEND EMAIL VERIFICATION OTP
+  // EMAIL VERIFICATION
   // --------------------------------------------------
 
   const resendVerificationEmail = async (
     email
   ) => {
     const data = await backendRequest(
-      '/api/auth/resend-email-otp',
+      '/api/auth/resend-email-verification',
       {
         email,
       }
@@ -581,7 +540,6 @@ export function AuthProvider({ children }) {
       login,
       logout,
 
-      verifyEmailOtp,
       resendVerificationEmail,
 
       resetPassword,

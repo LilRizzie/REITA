@@ -14,8 +14,21 @@ export default function Reports() {
   const [reports, setReports] = useState([]);
 
   useEffect(() => {
-    if (!user?.uid) return;
-    setReports(isAdmin ? getAllReports() : getReports(user.uid));
+    let active = true;
+
+    async function loadReports() {
+      if (!user?.uid) return;
+
+      try {
+        const loadedReports = await (isAdmin ? getAllReports() : getReports(user.uid));
+        if (active) setReports(loadedReports);
+      } catch {
+        if (active) setReports([]);
+      }
+    }
+
+    loadReports();
+    return () => { active = false; };
   }, [user?.uid, isAdmin]);
 
   async function handleDelete(id) {
@@ -25,9 +38,14 @@ export default function Reports() {
       danger: true,
     });
     if (!confirmed) return;
-    deleteReport(user.uid, id);
-    setReports(isAdmin ? getAllReports() : getReports(user.uid));
-    toast.success('Report deleted.');
+    try {
+      await deleteReport(user.uid, id);
+      const loadedReports = await (isAdmin ? getAllReports() : getReports(user.uid));
+      setReports(loadedReports);
+      toast.success('Report deleted.');
+    } catch (error) {
+      toast.error(error.message || 'Unable to delete report.');
+    }
   }
 
   function handleDownload(report) {

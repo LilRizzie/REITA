@@ -17,6 +17,7 @@ const normalizeProperty = (property) => {
     ownerUid: doc.ownerId ? String(doc.ownerId) : '',
     ownerEmail: doc.ownerEmail || '',
     ownerName: doc.ownerName || '',
+    agentPhone: doc.agentPhone || '',
     propertyName: doc.propertyName || '',
     propertyType: doc.propertyType || 'Residential',
     location: doc.location || [doc.address, doc.city, doc.state].filter(Boolean).join(', '),
@@ -110,6 +111,7 @@ const createProperty = async (req, res) => {
     const {
       propertyName,
       propertyType,
+      agentPhone,
       state,
       city,
       address,
@@ -144,6 +146,7 @@ const createProperty = async (req, res) => {
       agent: ownerId,
       ownerEmail,
       ownerName,
+      agentPhone: typeof agentPhone === 'string' ? agentPhone.trim() : '',
       propertyName: propertyName.trim(),
       propertyType: propertyType || 'Residential',
       location: req.body.location.trim(),

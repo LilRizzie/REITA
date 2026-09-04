@@ -6,10 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { getAuthErrorMessage } from '../utils/authErrors';
 
 export default function VerificationRequired() {
-  const { user, pendingVerificationEmail, logout, verifyEmailOtp, resendVerificationEmail, loading } = useAuth();
+  const { user, pendingVerificationEmail, logout, resendVerificationEmail, loading } = useAuth();
   const navigate = useNavigate();
-  const [otp, setOtp] = useState('');
-  const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
   const [error, setError] = useState('');
@@ -28,42 +26,17 @@ export default function VerificationRequired() {
     return () => clearTimeout(timer);
   }, [resendCountdown]);
 
-  const handleVerifyOtp = async (event) => {
-    event.preventDefault();
-    if (!otp.trim()) {
-      setError('Please enter the verification code.');
-      return;
-    }
-
-    setVerifying(true);
-    setError('');
-
-    try {
-      const email = user?.email || pendingVerificationEmail;
-      const result = await verifyEmailOtp(email, otp.trim());
-      toast.success('Email verified successfully.');
-      const verifiedUser = result?.user || user;
-      navigate(verifiedUser?.role === 'Administrator' ? '/admin-dashboard' : '/dashboard', { replace: true });
-    } catch (err) {
-      const message = getAuthErrorMessage(err);
-      setError(message);
-      toast.error(message);
-    } finally {
-      setVerifying(false);
-    }
-  };
-
   const handleResendVerification = async () => {
     if (resendCountdown > 0 || resending) return;
     setResending(true);
 
     try {
       await resendVerificationEmail(user?.email || pendingVerificationEmail);
-      toast.success('A new verification code has been sent.');
+      toast.success('A new verification link has been sent.');
       setResendCountdown(60);
     } catch (err) {
       const message = getAuthErrorMessage(err);
-      toast.error('Unable to send verification code.');
+      toast.error('Unable to send verification email.');
       setError(message);
     } finally {
       setResending(false);
@@ -77,36 +50,18 @@ export default function VerificationRequired() {
 
   return (
     <AuthLayout title="Verification required" subtitle="Please verify your email to continue.">
-      <form className="auth-form" onSubmit={handleVerifyOtp}>
+      <div className="auth-form">
         {error ? <div className="auth-message auth-message--error">{error}</div> : null}
 
         <div className="verification-card">
           <div className="verification-icon" aria-hidden="true">✉</div>
           <h2>Your email has not been verified.</h2>
-          <p>A verification code has been sent to:</p>
+          <p>A verification link has been sent to:</p>
           {(user?.email || pendingVerificationEmail) ? (
             <strong className="verification-email">{user?.email || pendingVerificationEmail}</strong>
           ) : null}
-          <p>The code expires in 10 minutes.</p>
+          <p>The link expires in 24 hours.</p>
         </div>
-
-        <label>
-          <span>Verification Code</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            maxLength={6}
-            value={otp}
-            onChange={(event) => setOtp(event.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="Enter 6-digit code"
-            required
-          />
-        </label>
-
-        <button type="submit" className="btn btn-primary auth-submit" disabled={verifying}>
-          {verifying ? 'Verifying…' : 'Verify Email'}
-        </button>
 
         <button
           type="button"
@@ -126,7 +81,7 @@ export default function VerificationRequired() {
         <button type="button" className="btn btn-secondary auth-submit" onClick={handleBackToLogin}>
           Back to Login
         </button>
-      </form>
+      </div>
     </AuthLayout>
   );
 }

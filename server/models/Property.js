@@ -24,6 +24,11 @@ const propertySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    agentPhone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     propertyName: {
       type: String,
       required: true,

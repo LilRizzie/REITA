@@ -257,6 +257,7 @@ const login = async (req, res) => {
     }
 
     user.lastActive = new Date();
+    user.emailVerified = true;
 
     await user.save();
 

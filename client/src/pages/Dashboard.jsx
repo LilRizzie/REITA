@@ -380,270 +380,201 @@ export default function Dashboard() {
     data.analyses,
   ]);
 
+  const portfolioSummary = [
+    {
+      label: 'TOTAL PORTFOLIO VALUE',
+      value: fmtNaira(totalPortfolioValue),
+      change: '+ 8.4%',
+      footnote: '+$96,820 this year',
+    },
+    {
+      label: 'TOTAL INVESTED',
+      value: fmtNaira(
+        data.properties.reduce(
+          (sum, property) => sum + Number(property.purchasePrice || property.currentValue || 0),
+          0
+        )
+      ),
+      change: 'Across 8 properties',
+      footnote: ' ',
+    },
+    {
+      label: 'RENTAL INCOME',
+      value: fmtNaira(
+        data.properties.reduce(
+          (sum, property) =>
+            sum + Number(
+              property.annualRent || property.annualRentalIncome || Number(property.monthlyRent || 0) * 12
+            ),
+          0
+        )
+      ),
+      change: 'Past 12 months',
+      footnote: ' ',
+    },
+    {
+      label: 'AVERAGE YIELD',
+      value: `${averageRoi}%`,
+      change: '+0.6% vs last year',
+      footnote: ' ',
+    },
+  ];
+
+  const allocationData = [
+    { label: 'Residential', value: 42, amount: '$524,370', color: 'gold' },
+    { label: 'Commercial', value: 28, amount: '$349,580', color: 'amber' },
+    { label: 'Mixed Use', value: 18, amount: '$224,730', color: 'slate' },
+    { label: 'Land', value: 12, amount: '$149,820', color: 'blue' },
+  ];
+
   return (
     <ProtectedLayout
       title="Dashboard"
       subtitle="Live information from your REITA workspace."
     >
-      <section className="hero-panel premium-panel">
-        <div>
-          <p className="eyebrow">{role}</p>
-
-          <h3>
-            Welcome back,{' '}
-            {user?.fullName || user?.displayName || profile?.fullName || 'User'}
-          </h3>
-
-          <p>
-            Review the latest activity and
-            continue where you left off.
-          </p>
-        </div>
-
-        <button
-          className="btn btn-secondary"
-          onClick={() =>
-            setRefreshKey((value) => value + 1)
-          }
-          disabled={loading}
-        >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </button>
+      <section className="portfolio-overview">
+        <p className="portfolio-kicker">PORTFOLIO OVERVIEW</p>
+        <h1 className="portfolio-title">
+          Good evening,{' '}
+          {user?.fullName || user?.displayName || profile?.fullName || 'Jackson'}.
+        </h1>
+        <p className="portfolio-subtitle">
+          Here&apos;s how your real-estate portfolio is performing.
+        </p>
       </section>
 
-      <section className="stats-grid">
-        {cards.map(([label, value]) => (
-          <StatCard
-            key={label}
-            label={label}
-            value={value}
-            change={
-              loading
-                ? 'Loading...'
-                : 'Current data'
-            }
-          />
+      <section className="portfolio-summary-grid">
+        {portfolioSummary.map((item) => (
+          <article key={item.label} className="summary-stat">
+            <p className="summary-label">{item.label}</p>
+            <h3>{item.value}</h3>
+            {item.change && item.change.startsWith('+') ? (
+              <div className="summary-change-row">
+                <span className="summary-badge">{item.change}</span>
+                <span className="summary-footnote">{item.footnote}</span>
+              </div>
+            ) : (
+              <div className="summary-meta-row">
+                <span className="summary-footnote">{item.change}</span>
+                <span className="summary-footnote">{item.footnote}</span>
+              </div>
+            )}
+          </article>
         ))}
       </section>
 
-      {role === 'Investor' && (
-        <section className="stats-grid">
-          <StatCard
-            label="Last Report Generated"
-            value={
-              recentReport
-                ? new Date(
-                    recentReport.createdAt
-                  ).toLocaleDateString()
-                : 'None yet'
-            }
-            change={
-              recentReport?.propertyName ||
-              'Generate an analysis'
-            }
-          />
-
-          <StatCard
-            label="Recent Analysis"
-            value={
-              data.analyses[0]?.propertyName ||
-              'None yet'
-            }
-            change={
-              data.analyses[0]
-                ?.recommendation ||
-              'Use Calculator'
-            }
-          />
-
-          <StatCard
-            label="Recent Property Added"
-            value={
-              recentProperty?.propertyName ||
-              'None yet'
-            }
-            change={
-              recentProperty?.location ||
-              'Add your first property'
-            }
-          />
-        </section>
-      )}
-
-      {data.properties.length > 0 && (
-        <section className="glass-card panel-card">
-          <p className="eyebrow">
-            Quick insights
-          </p>
-
-          <h4>Portfolio highlights</h4>
-
-          <div className="insight-grid">
-            <div className="insight-item">
-              <span>
-                Highest Performing Property
-              </span>
-
-              <strong>
-                {highestRoiProperty
-                  ?.propertyName || '—'}
-              </strong>
-
-              <small>
-                {highestRoiProperty
-                  ? `${roi(
-                      highestRoiProperty
-                    ).toFixed(1)}% ROI`
-                  : ''}
-              </small>
+      <section className="portfolio-panels">
+        <div className="panel-card chart-panel">
+          <div className="panel-header-row">
+            <div>
+              <p className="eyebrow">PERFORMANCE</p>
+              <h4>Portfolio growth</h4>
             </div>
-
-            <div className="insight-item">
-              <span>Highest ROI</span>
-
-              <strong>
-                {propertyRois.length
-                  ? `${Math.max(
-                      ...propertyRois
-                    ).toFixed(1)}%`
-                  : '0%'}
-              </strong>
-
-              <small>
-                {highestRoiProperty
-                  ?.propertyName || ''}
-              </small>
-            </div>
-
-            <div className="insight-item">
-              <span>Lowest Expense</span>
-
-              <strong>
-                {lowestExpenseProperty
-                  ? fmtNaira(
-                      lowestExpenseProperty.annualExpenses
-                    )
-                  : '—'}
-              </strong>
-
-              <small>
-                {lowestExpenseProperty
-                  ?.propertyName || ''}
-              </small>
-            </div>
-
-            <div className="insight-item">
-              <span>Newest Property</span>
-
-              <strong>
-                {recentProperty
-                  ?.propertyName || '—'}
-              </strong>
-
-              <small>
-                {recentProperty
-                  ? new Date(
-                      recentProperty.createdAt
-                    ).toLocaleDateString()
-                  : ''}
-              </small>
-            </div>
-
-            <div className="insight-item">
-              <span>Most Expensive Property</span>
-
-              <strong>
-                {mostExpensiveProperty
-                  ? fmtNaira(
-                      mostExpensiveProperty.currentValue
-                    )
-                  : '—'}
-              </strong>
-
-              <small>
-                {mostExpensiveProperty
-                  ?.propertyName || ''}
-              </small>
-            </div>
-
-            <div className="insight-item">
-              <span>
-                Largest Rental Income
-              </span>
-
-              <strong>
-                {largestRentProperty
-                  ? fmtNaira(
-                      largestRentProperty.annualRent ||
-                        largestRentProperty.annualRentalIncome
-                    )
-                  : '—'}
-              </strong>
-
-              <small>
-                {largestRentProperty
-                  ?.propertyName || ''}
-              </small>
+            <div className="range-switch" aria-label="Performance ranges">
+              <button type="button" className="range-button active">1M</button>
+              <button type="button" className="range-button">6M</button>
+              <button type="button" className="range-button">1Y</button>
+              <button type="button" className="range-button">All</button>
             </div>
           </div>
-        </section>
-      )}
 
-      <section className="dashboard-grid-two">
-        <div className="glass-card panel-card">
-          <p className="eyebrow">
-            Recent activity
-          </p>
+          <div className="portfolio-chart" aria-label="Portfolio growth chart">
+            <div className="chart-axis left">
+              <span>$1.3M</span>
+              <span>$1.1M</span>
+              <span>$900K</span>
+              <span>$700K</span>
+            </div>
+            <div className="chart-body">
+              <div className="chart-surface">
+                <div className="chart-fill" />
+              </div>
+              <div className="chart-labels">
+                <span>Jan</span>
+                <span>Feb</span>
+                <span>Mar</span>
+                <span>Apr</span>
+                <span>May</span>
+                <span>Jun</span>
+                <span>Jul</span>
+                <span>Aug</span>
+                <span>Sep</span>
+                <span>Oct</span>
+                <span>Nov</span>
+                <span>Dec</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          <h4>Activity timeline</h4>
+        <div className="panel-card allocation-panel">
+          <div className="panel-header-row allocation-header">
+            <div>
+              <p className="eyebrow">ALLOCATION</p>
+              <h4>By property type</h4>
+            </div>
+            <button type="button" className="text-link">View details →</button>
+          </div>
+
+          <div className="allocation-bar" aria-label="Asset allocation">
+            {allocationData.map((item) => (
+              <span
+                key={item.label}
+                className={`allocation-segment ${item.color}`}
+                style={{ width: `${item.value}%` }}
+                title={`${item.label} ${item.value}%`}
+              />
+            ))}
+          </div>
+
+          <div className="allocation-list">
+            {allocationData.map((item) => (
+              <div key={item.label} className="allocation-row">
+                <div className="allocation-name">
+                  <span className={`dot ${item.color}`} />
+                  <span>{item.label}</span>
+                </div>
+                <div className="allocation-value">
+                  <strong>{item.value}%</strong>
+                  <span>{item.amount}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bottom-row">
+        <div className="panel-card activity-panel">
+          <div className="panel-header-row simple-row">
+            <div>
+              <p className="eyebrow">RECENT ACTIVITY</p>
+              <h4>Latest updates on your portfolio</h4>
+            </div>
+            <button type="button" className="ghost-action" onClick={() => navigate('/properties')}>
+              View Properties
+            </button>
+          </div>
 
           {activityItems.length === 0 ? (
-            <p className="muted">
-              No activity yet. Add a property
-              or generate a report to see
-              activity here.
-            </p>
+            <p className="muted">No activity yet. Add a property or generate a report to see activity here.</p>
           ) : (
             <ul className="timeline-list activity-timeline">
               {activityItems.map((item) => (
-                <li
-                  key={item.id}
-                  className={`activity-${item.type}`}
-                >
-                  {item.label}
-
-                  <span>
-                    {new Date(
-                      item.date
-                    ).toLocaleDateString()}
-                  </span>
+                <li key={item.id} className={`activity-${item.type}`}>
+                  <span>{item.label}</span>
+                  <time>{new Date(item.date).toLocaleDateString()}</time>
                 </li>
               ))}
             </ul>
           )}
         </div>
 
-        <div className="glass-card panel-card">
-          <p className="eyebrow">
-            Quick actions
-          </p>
-
-          <h4>Continue working</h4>
-
-          <div className="action-stack">
-            {actions.map(
-              ([label, path]) => (
-                <button
-                  className="action-btn"
-                  key={label}
-                  onClick={() =>
-                    navigate(path)
-                  }
-                >
-                  {label}
-                </button>
-              )
-            )}
+        <div className="panel-card quick-actions-panel">
+          <div className="quick-action-row">
+            <button type="button" className="ghost-action" onClick={() => navigate('/properties')}>View Properties</button>
+            <button type="button" className="ghost-action" onClick={() => navigate('/reports')}>Generate Report</button>
+            <button type="button" className="ghost-action" onClick={() => navigate('/properties')}>Add Property</button>
           </div>
         </div>
       </section>

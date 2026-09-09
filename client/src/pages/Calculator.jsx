@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import ProtectedLayout from '../components/ProtectedLayout';
 import { useAuth } from '../context/AuthContext';
 import { getInvestmentProperties, getProperties, saveAnalysis, saveReport } from '../utils/propertyStorage';
+import { printReportDocument } from '../utils/reportDocument';
 
 ChartJS.register(BarElement, CategoryScale, Legend, LinearScale, Tooltip);
 
@@ -143,8 +144,8 @@ export default function Calculator() {
     };
 
     saveReport(user.uid, report);
+    printReportDocument(report);
     toast.success('Report generated successfully.');
-    window.print();
   }
 
   return (
@@ -158,10 +159,10 @@ export default function Calculator() {
             </div>
           </div>
 
-          <div className="field-stack">
+          <div className="field-stack calculator-field-stack">
             <label>
               <span>Available Property</span>
-              <select value={selectedPropertyId} onChange={handlePropertySelect}>
+              <select className="calculator-property-select" value={selectedPropertyId} onChange={handlePropertySelect}>
                 <option value="">Choose an available property</option>
                 {properties.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -170,10 +171,9 @@ export default function Calculator() {
                 ))}
               </select>
             </label>
-
           </div>
 
-          <div className="button-row">
+          <div className="button-row calculator-button-row">
             <button className="btn btn-primary" type="button" onClick={analyze}>Analyze Investment</button>
             <button className="btn btn-secondary" type="button" onClick={generateReport}>Generate Report</button>
           </div>

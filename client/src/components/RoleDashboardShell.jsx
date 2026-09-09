@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FaArrowUp, FaBars, FaBook, FaDownload, FaEnvelope, FaExternalLinkAlt, FaTimes } from 'react-icons/fa';
+import { FaArrowUp, FaBars, FaBook, FaBriefcase, FaBuilding, FaCalculator, FaChartBar, FaChartLine, FaCog, FaDownload, FaEnvelope, FaExternalLinkAlt, FaFileAlt, FaHome, FaTimes, FaUser, FaUsers } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { getRoleConfig, getRoleLabel } from '../config/roleConfig';
@@ -10,6 +10,20 @@ import ProfileMenu from './ProfileMenu';
 
 const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
 const DEV_EMAIL = 'britneyjacksonel@gmail.com';
+
+const navIcons = {
+  Dashboard: FaHome,
+  'Available Investments': FaBriefcase,
+  Calculator: FaCalculator,
+  'My Properties': FaBuilding,
+  Properties: FaBuilding,
+  Clients: FaUsers,
+  Users: FaUsers,
+  Reports: FaFileAlt,
+  Analytics: FaChartBar,
+  Profile: FaUser,
+  Settings: FaCog,
+};
 
 export default function RoleDashboardShell({ title, subtitle, children }) {
   const { user, profile, logout } = useAuth();
@@ -57,14 +71,14 @@ export default function RoleDashboardShell({ title, subtitle, children }) {
   const navContent = (
     <>
       <div className="sidebar-top">
-        <div className="brand-mark sidebar-brand">A</div>
+        <div className="brand-mark sidebar-brand">R</div>
         <div>
           <p className="eyebrow">REITA</p>
-          <h2>Private workspace</h2>
+          <h2>Investment workspace</h2>
         </div>
       </div>
 
-      <p className="muted sidebar-copy">Luxury-grade portfolio visibility for every investor.</p>
+      <p className="muted sidebar-copy">Clarity for every property decision.</p>
 
       <nav className="sidebar-nav">
         {config.navItems.map((item) => (
@@ -74,7 +88,11 @@ export default function RoleDashboardShell({ title, subtitle, children }) {
             className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
             onClick={() => setDrawerOpen(false)}
           >
-            {item.label}
+            {(() => {
+              const Icon = navIcons[item.label] || FaChartLine;
+              return <Icon aria-hidden="true" />;
+            })()}
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>

@@ -277,6 +277,7 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 24px;
   width: 100%;
+  min-width: 0;
   align-items: start;
 }
 
@@ -1553,6 +1554,7 @@ body {
 .portfolio-summary-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+  min-width: 0;
   border-top: 1px solid rgba(245, 239, 230, 0.12);
   border-bottom: 1px solid rgba(245, 239, 230, 0.12);
   background: rgba(15, 15, 14, 0.8);
@@ -1561,10 +1563,12 @@ body {
 .summary-stat {
   padding: 1.5rem 1.4rem 1.2rem;
   min-height: 160px;
+  min-width: 0;
   border-left: 1px solid rgba(245, 239, 230, 0.12);
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
 }
 
 .summary-stat:first-child {
@@ -1581,13 +1585,35 @@ body {
 }
 
 .summary-stat h3 {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   color: #f5efe6;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.2rem, 3vw, 4rem);
-  line-height: 1;
+  font-size: clamp(1.2rem, 2vw, 2.5rem);
+  line-height: 1.1;
   letter-spacing: -0.04em;
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.summary-stat h3:hover {
+  color: #fff;
+  text-overflow: clip;
+  white-space: normal;
+  overflow: visible;
+  position: relative;
+  z-index: 5;
+  background: rgba(10, 10, 10, 0.96);
+  border-radius: 0.5rem;
+  padding: 0.2rem 0.4rem;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
 }
 
 .summary-change-row,
@@ -2923,8 +2949,11 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   gap: 1rem;
+  min-width: 0;
+  max-width: 100%;
   padding: 1.2rem;
   border-radius: 1.2rem;
+  overflow: hidden;
   transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -2950,6 +2979,7 @@ tbody tr:hover {
   display: grid;
   gap: 0.2rem;
   min-width: 0;
+  max-width: 100%;
 }
 
 .metric-label {
@@ -2960,6 +2990,9 @@ tbody tr:hover {
 }
 
 .metric-value {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
   color: #fff;
   font-size: 1.4rem;
   font-weight: 800;
@@ -4188,16 +4221,21 @@ html[data-theme='light'] .action-btn {
 .app-shell .content-panel > .stats-grid:first-of-type {
   grid-template-columns: minmax(280px, 1.5fr) repeat(3, minmax(135px, 1fr));
   gap: 0;
+  min-width: 0;
   border-bottom: 1px solid rgba(246, 239, 225, 0.09);
 }
 
 .app-shell .content-panel > .stats-grid .metric-card {
   min-height: 118px;
+  min-width: 0;
+  max-width: 100%;
   padding: 0 1.25rem 1.25rem;
   border: 0;
   border-left: 1px solid rgba(246, 239, 225, 0.09);
   border-radius: 0;
   background: transparent;
+  overflow: hidden;
+  contain: layout paint;
 }
 
 .app-shell .content-panel > .stats-grid .metric-card:first-child {
@@ -4212,12 +4250,32 @@ html[data-theme='light'] .action-btn {
   letter-spacing: 0.18em;
 }
 
-.app-shell .metric-card h3 {
+.app-shell .metric-card h3,
+.app-shell .metric-card-value,
+.app-shell .metric-value {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0.7rem 0 0.35rem;
   color: #f8f3e9;
   font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(1.55rem, 3vw, 2.35rem);
   font-weight: 400;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.04em;
+}
+
+.app-shell .metric-card-value-large {
+  font-size: clamp(0.95rem, 2vw, 1.7rem);
+}
+
+.metric-card-value-large,
+.metric-value.metric-value-large {
+  font-size: clamp(0.9rem, 1.8vw, 1.7rem);
 }
 
 .app-shell .metric-change {
